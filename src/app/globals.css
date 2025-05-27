@@ -1,15 +1,10 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +18,52 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom styles for rankings table */
+.rankings-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.rankings-table th,
+.rankings-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rankings-table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.rankings-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.rankings-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Remove any unwanted styles from the USCHO HTML */
+.rankings-table font {
+  color: inherit !important;
+}
+
+.rankings-table a {
+  color: #60a5fa !important;
+  text-decoration: none;
+}
+
+.rankings-table a:hover {
+  text-decoration: underline;
+}
+
+/* Others Receiving Votes section */
+.rankings-table div p {
+  line-height: 1.6;
 }

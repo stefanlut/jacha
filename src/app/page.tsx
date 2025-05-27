@@ -1,103 +1,142 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [rankingsHtml, setRankingsHtml] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  const [pollDate, setPollDate] = useState<string>('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  useEffect(() => {
+    const fetchRankings = async () => {
+      try {
+        const response = await axios.get('https://json-b.uscho.com/json/rankings/d-i-mens-poll', {
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        if (!response.data?.html) {
+          throw new Error('No data received from USCHO');
+        }
+
+        const $ = cheerio.load(response.data.html);
+        
+        // Remove unwanted elements first
+        $('.small-text, script').remove();
+        
+        // Get the main rankings table
+        const table = $('table').first();
+        if (!table.length) {
+          throw new Error('No rankings table found');
+        }
+
+        // Try to find the poll date
+        const headerText = $('h1, h2, h3, h4').text();
+        const dateMatch = headerText.match(/(?:Rankings|Poll).*?([A-Z][a-z]+ \d{1,2},? \d{4})/);
+        if (dateMatch) {
+          setPollDate(dateMatch[1]);
+        } else {
+          // If no date found in headers, look for it in other text
+          $('*').each((i, elem) => {
+            const text = $(elem).text();
+            const match = text.match(/(?:Rankings|Poll).*?([A-Z][a-z]+ \d{1,2},? \d{4})/);
+            if (match) {
+              setPollDate(match[1]);
+              return false; // break the loop
+            }
+          });
+        }
+
+        // Try to find the "Others Receiving Votes" text
+        let othersVotes = '';
+        
+        // First try to find it in any HTML element
+        $('*').each((i, elem) => {
+          $(elem).contents().each((j, child) => {
+            if (child.type === 'text') {
+              const text = $(child).text().trim();
+              if (text.toLowerCase().includes('others receiving votes')) {
+                othersVotes = text;
+                return false; // break the loop
+              }
+            }
+          });
+          if (othersVotes) return false; // break outer loop if found
+        });
+
+        // If still not found, try searching the raw HTML
+        if (!othersVotes) {
+          const fullHtml = response.data.html;
+          const match = fullHtml.match(/Others receiving votes:[\s\w,\.]+/i);
+          if (match) {
+            othersVotes = match[0];
+          }
+        }
+
+        // Create the cleaned HTML with rankings and others receiving votes
+        const cleanedHtml = `${$.html(table)}
+          ${othersVotes ? `
+            <div class="mt-6 text-sm text-slate-300">
+              <p class="font-semibold mb-2">Others Receiving Votes:</p>
+              <p>${othersVotes.replace(/others\s+receiving\s+votes:?/i, '').trim()}</p>
+            </div>
+          ` : ''}`;
+        
+        setRankingsHtml(cleanedHtml);
+      } catch (error) {
+        console.error('Error fetching rankings:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch rankings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRankings();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
+      <div className="container mx-auto px-4 py-8">
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-2">JACHA</h1>
+          <p className="text-slate-300">Just Another College Hockey App</p>
+        </header>
+
+        <main>
+          <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold">Division I Men's Hockey Rankings</h2>
+              {!loading && !error && rankingsHtml && (
+                <p className="text-slate-400 text-sm mt-2">Updated {pollDate}</p>
+              )}
+            </div>
+            
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+              </div>
+            ) : error ? (
+              <div className="text-center text-red-400 p-8">
+                <p>{error}</p>
+                <p className="mt-2 text-sm text-slate-400">Please try again later or check back for updated rankings.</p>
+              </div>
+            ) : (
+              <div 
+                className="rankings-table prose prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: rankingsHtml }}
+              />
+            )}
+          </div>
+        </main>
+
+        <footer className="text-center mt-8 text-slate-400 text-sm">
+          <p>Data provided by USCHO.com</p>
+        </footer>
+      </div>
     </div>
   );
 }
