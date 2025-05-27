@@ -4,16 +4,28 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
+import PollSelector from './components/PollSelector';
+import { Poll } from './types';
+
+const defaultPoll: Poll = {
+  id: 'd-i-mens-poll',
+  name: "Men's Division I",
+  url: 'https://json-b.uscho.com/json/rankings/d-i-mens-poll'
+};
+
 export default function Home() {
   const [rankingsHtml, setRankingsHtml] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [pollDate, setPollDate] = useState<string>('');
+  const [selectedPoll, setSelectedPoll] = useState<Poll>(defaultPoll);
 
   useEffect(() => {
     const fetchRankings = async () => {
       try {
-        const response = await axios.get('https://json-b.uscho.com/json/rankings/d-i-mens-poll', {
+        setLoading(true);
+        setError('');
+        const response = await axios.get(selectedPoll.url, {
           headers: {
             'Accept': 'application/json',
           }
@@ -96,7 +108,7 @@ export default function Home() {
     };
 
     fetchRankings();
-  }, []);
+  }, [selectedPoll.url]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
@@ -108,10 +120,11 @@ export default function Home() {
 
         <main>
           <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-semibold">Division I Men's Hockey Rankings</h2>
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-center mb-6">USCHO Division I Hockey Rankings</h2>
+              <PollSelector selectedPoll={selectedPoll} onPollChange={setSelectedPoll} />
               {!loading && !error && rankingsHtml && (
-                <p className="text-slate-400 text-sm mt-2">Updated {pollDate}</p>
+                <p className="text-slate-400 text-sm text-center mt-2">Updated {pollDate}</p>
               )}
             </div>
             

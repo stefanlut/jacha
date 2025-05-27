@@ -1,13 +1,16 @@
 # JACHA (Just Another College Hockey App)
 
-A modern, clean interface for viewing NCAA Division I Men's Hockey Rankings. Built with Next.js and Tailwind CSS.
+A modern, clean interface for viewing NCAA Division I Hockey Rankings for both Men's and Women's programs. Built with Next.js and Tailwind CSS.
 
 ## Features
 
-- 📊 Real-time Division I Men's Hockey Rankings from USCHO.com
+- 📊 Real-time Division I Hockey Rankings from USCHO.com:
+  - Men's Division I Rankings
+  - Women's Division I Rankings
+- 🔄 Easy switching between Men's and Women's polls
 - 🎨 Clean, modern dark mode interface
 - 📱 Responsive design that works on desktop and mobile
-- 🔄 Live updates showing:
+- 📈 Live updates showing:
   - Current rankings
   - Teams receiving votes outside the top rankings
   - Last poll update date
@@ -37,17 +40,29 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 ```
 src/
   app/
-    page.tsx      # Main rankings page
-    layout.tsx    # App layout
-    globals.css   # Global styles
+    components/
+      PollSelector.tsx  # Poll switching component
+    types.ts           # TypeScript interfaces
+    page.tsx          # Main rankings page
+    layout.tsx        # App layout
+    globals.css       # Global styles
 ```
 
 ## Data Refresh
 
-The rankings are fetched from USCHO.com's JSON endpoint and automatically updated when you load the page. The data includes:
+The rankings are fetched from USCHO.com's JSON endpoints and automatically updated when you load the page or switch between polls. Available data includes:
+
+### Men's Division I
 - Current top 20 rankings
 - Teams receiving votes but not in the top rankings
 - Last poll update date
+
+### Women's Division I
+- Current top 15 rankings
+- Teams receiving votes but not in the top rankings
+- Last poll update date
+
+Rankings are fetched in real-time and include the latest updates from USCHO.com.
 
 ## License
 
