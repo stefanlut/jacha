@@ -154,7 +154,7 @@ export default function Home() {
         </main>
 
         <footer className="text-center mt-8 text-slate-400 text-sm">
-          <p>Data provided by USCHO.com</p>
+          <p>Data provided by <a href="https://www.uscho.com" className="hover:text-white">USCHO.com</a></p>
         </footer>
       </div>
     </div>
