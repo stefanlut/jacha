@@ -7,6 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        varsity: ['var(--font-varsity)'],
+      },
       typography: {
         DEFAULT: {
           css: {

@@ -6,6 +6,7 @@ import * as cheerio from 'cheerio';
 
 import PollSelector from './components/PollSelector';
 import { Poll } from './types';
+import { varsity } from './fonts';
 
 const defaultPoll: Poll = {
   id: 'd-i-mens-poll',
@@ -45,6 +46,12 @@ export default function Home() {
         if (!table.length) {
           throw new Error('No rankings table found');
         }
+        
+        // Replace links with their text content
+        table.find('a').each((_, elem) => {
+          const $link = $(elem);
+          $link.replaceWith($link.text());
+        });
 
         // Try to find the poll date
         const headerText = $('h1, h2, h3, h4').text();
@@ -114,7 +121,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">JACHA</h1>
+          <h1 className={`text-5xl mb-2 ${varsity.className} tracking-wider`}>JACHA</h1>
           <p className="text-slate-300">Just Another College Hockey App</p>
         </header>
 
