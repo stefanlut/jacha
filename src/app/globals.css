@@ -21,8 +21,14 @@ body {
 }
 
 /* Custom styles for rankings table */
+.rankings-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .rankings-table table {
   width: 100%;
+  min-width: 640px; /* Ensures table doesn't get too squeezed on mobile */
   border-collapse: collapse;
   margin: 0;
 }
