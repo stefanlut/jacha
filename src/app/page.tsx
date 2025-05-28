@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import Link from 'next/link';
 
 import PollSelector from './components/PollSelector';
 import { Poll } from './types';
@@ -124,6 +125,11 @@ export default function Home() {
           <h1 className={`text-5xl mb-2 ${varsity.className} tracking-wider`}>JACHA</h1>
           <p className="text-slate-300">Just Another College Hockey App</p>
         </header>
+
+        <nav className="mb-8 flex gap-4">
+          <Link href="/" className="text-blue-600 hover:text-blue-800">Rankings</Link>
+          <Link href="/teams" className="text-blue-600 hover:text-blue-800">Team Profiles</Link>
+        </nav>
 
         <main>
           <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">

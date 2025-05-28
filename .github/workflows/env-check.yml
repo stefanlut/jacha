@@ -1,0 +1,28 @@
+name: Environment Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Check Required Environment Variables
+        run: |
+          if [ ! -f .env.example ]; then
+            echo "❌ .env.example file is missing"
+            exit 1
+          fi
+          
+          # Check if SPORTRADAR_API_KEY is documented
+          if ! grep -q "SPORTRADAR_API_KEY" .env.example; then
+            echo "❌ SPORTRADAR_API_KEY is not documented in .env.example"
+            exit 1
+          fi
+          
+          echo "✅ Environment variable documentation check passed"

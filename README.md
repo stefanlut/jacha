@@ -23,6 +23,57 @@ A modern, clean interface for viewing NCAA Division I Hockey Rankings for both M
 - **Data Parsing**: Cheerio
 - **HTTP Client**: Axios
 
+## Deployment
+
+This application uses Next.js API routes and requires a server runtime. The recommended deployment method is Vercel:
+
+1. Fork this repository to your GitHub account
+2. Sign up for [Vercel](https://vercel.com) (free for hobby projects)
+3. Create a new project in Vercel and connect it to your forked repository
+4. Add your `SPORTRADAR_API_KEY` in Vercel:
+   - Go to Project Settings > Environment Variables
+   - Add `SPORTRADAR_API_KEY` with your API key
+   - Vercel will automatically encrypt and secure your API key
+
+Vercel will automatically:
+- Deploy your application
+- Handle API routes correctly
+- Manage environment variables securely
+- Provide automatic HTTPS
+- Enable automatic deployments on git push
+
+### Alternative Deployment Options
+
+If you prefer not to use Vercel, you can:
+1. Use another hosting platform that supports Next.js API routes (Netlify, AWS, etc.)
+2. Split the application into:
+   - Frontend (static site on GitHub Pages)
+   - Backend (serverless functions for API calls)
+
+Note: GitHub Pages alone won't work because it doesn't support server-side functionality needed for the API routes.
+
+## Environment Variables
+
+This application requires the following environment variables to be set:
+
+```bash
+SPORTRADAR_API_KEY=your_api_key_here  # Required for fetching team data
+```
+
+You can get your API key by:
+1. Creating an account at [SportRadar Developer Portal](https://developer.sportradar.com/)
+2. Subscribing to the NCAA Men's Hockey API
+3. Copying your API key from your dashboard
+
+For local development:
+1. Copy `.env.example` to `.env.local`
+2. Replace `your_api_key_here` with your actual API key
+
+For production deployment:
+1. Add the `SPORTRADAR_API_KEY` environment variable to your hosting platform
+   - For Vercel: Add in Project Settings > Environment Variables
+   - For other platforms: Consult their documentation for adding environment variables
+
 ## Local Development
 
 ```bash
