@@ -38,7 +38,7 @@ export default function TeamSelector({ onTeamSelect }: TeamSelectorProps) {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-4">
-        <p className="text-gray-600">Loading teams...</p>
+        <p className="text-gray-800">Loading teams...</p>
       </div>
     );
   }
@@ -46,22 +46,22 @@ export default function TeamSelector({ onTeamSelect }: TeamSelectorProps) {
   if (error) {
     return (
       <div className="bg-red-50 rounded-lg p-4">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-700">{error}</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
         {teams.map((team) => (
           <button
             key={team.id}
             onClick={() => onTeamSelect(team)}
-            className="p-4 text-left border rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-6 text-left border rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
           >
-            <h3 className="font-semibold">{team.market}</h3>
-            <p className="text-sm text-gray-600">{team.name}</p>
+            <h3 className="font-semibold text-gray-900 mb-1 truncate">{team.market}</h3>
+            <p className="text-sm text-gray-700 truncate">{team.name}</p>
           </button>
         ))}
       </div>

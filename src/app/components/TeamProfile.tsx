@@ -34,7 +34,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600">Loading team profile...</p>
+        <p className="text-gray-800">Loading team profile...</p>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
   if (error) {
     return (
       <div className="bg-red-50 rounded-lg p-6">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-700">{error}</p>
       </div>
     );
   }
@@ -53,24 +53,24 @@ export default function TeamProfile({ team }: TeamProfileProps) {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4">{profileData.market} {profileData.name}</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-900">{profileData.market} {profileData.name}</h2>
       
       {/* Conference Info */}
       {profileData.conference && (
         <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">Conference</h3>
-          <p>{profileData.conference.name}</p>
+          <h3 className="text-lg font-semibold mb-2 text-gray-900">Conference</h3>
+          <p className="text-gray-800">{profileData.conference.name}</p>
         </div>
       )}
 
       {/* Venue Info */}
       {profileData.venue && (
         <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">Home Arena</h3>
-          <p>{profileData.venue.name}</p>
-          <p>{profileData.venue.city}, {profileData.venue.state}</p>
+          <h3 className="text-lg font-semibold mb-2 text-gray-900">Home Arena</h3>
+          <p className="text-gray-800">{profileData.venue.name}</p>
+          <p className="text-gray-800">{profileData.venue.city}, {profileData.venue.state}</p>
           {profileData.venue.capacity && (
-            <p>Capacity: {profileData.venue.capacity.toLocaleString()}</p>
+            <p className="text-gray-800">Capacity: {profileData.venue.capacity.toLocaleString()}</p>
           )}
         </div>
       )}
@@ -78,15 +78,15 @@ export default function TeamProfile({ team }: TeamProfileProps) {
       {/* Players */}
       {profileData.players && profileData.players.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-2">Players</h3>
+          <h3 className="text-lg font-semibold mb-2 text-gray-900">Players</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {profileData.players.map((player) => (
               <div key={player.id} className="p-3 border rounded">
-                <p className="font-semibold">
+                <p className="font-semibold text-gray-900">
                   {player.jersey_number && `#${player.jersey_number} `}
                   {player.full_name}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-700">
                   {player.position}
                   {player.class_year && ` • ${player.class_year}`}
                 </p>
