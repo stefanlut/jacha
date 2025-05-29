@@ -6,6 +6,7 @@ import { ApiError, ApiErrorResponse, SportRadarTeam } from '@/app/types';
 
 const API_KEY = process.env.SPORTRADAR_API_KEY;
 const BASE_URL = 'https://api.sportradar.com/ncaamh/trial/v3/en';
+const CURRENT_SEASON = '2024-25';  // This should ideally come from the API
 
 // Map of API team market names to list_of_programs.txt names
 const teamNameMap = new Map<string, string>([
@@ -83,7 +84,10 @@ export async function GET() {
       a.market.localeCompare(b.market, 'en', { sensitivity: 'base' })
     );
 
-    return NextResponse.json(sortedTeams);
+    return NextResponse.json({
+      season: CURRENT_SEASON,
+      teams: sortedTeams
+    });
   } catch (error) {
     const err = error as AxiosError<ApiError>;
     return NextResponse.json(

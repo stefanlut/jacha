@@ -36,6 +36,11 @@ export interface SportRadarTeam {
   alias: string;
 }
 
+export interface TeamsResponse {
+  season: string;
+  teams: SportRadarTeam[];
+}
+
 export interface TeamProfileData extends SportRadarTeam {
   players?: Player[];
   venue?: {

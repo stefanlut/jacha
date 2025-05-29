@@ -8,6 +8,11 @@ interface TeamSelectorProps {
   onTeamSelect: (team: SportRadarTeam) => void;
 }
 
+interface TeamsResponse {
+  season: string;
+  teams: SportRadarTeam[];
+}
+
 export default function TeamSelector({ onTeamSelect }: TeamSelectorProps) {
   const [teams, setTeams] = useState<SportRadarTeam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,9 +21,9 @@ export default function TeamSelector({ onTeamSelect }: TeamSelectorProps) {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await axios.get<SportRadarTeam[]>('/api/teams');
-        if (Array.isArray(response.data)) {
-          setTeams(response.data); // Teams are already sorted in the API
+        const response = await axios.get<TeamsResponse>('/api/teams');
+        if (response.data.teams) {
+          setTeams(response.data.teams); // Teams are already sorted in the API
         } else {
           setError('Invalid response format');
         }
