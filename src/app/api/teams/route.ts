@@ -3,10 +3,32 @@ import axios, { AxiosError } from 'axios';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { ApiError, ApiErrorResponse, SportRadarTeam } from '@/app/types';
+import { apiCache } from '@/app/utils/cache';
 
 const API_KEY = process.env.SPORTRADAR_API_KEY;
 const BASE_URL = 'https://api.sportradar.com/ncaamh/trial/v3/en';
-const CURRENT_SEASON = '2024-25';  // This should ideally come from the API
+
+// Calculate current season based on date
+function getCurrentSeason(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // getMonth() returns 0-11
+  
+  // Hockey season typically runs from September to April
+  // If we're in September-December, it's the start of the season (year-year+1)
+  // If we're in January-April, it's the end of the season (year-1-year)
+  // If we're in May-August, it's off-season, use the upcoming season (year-year+1)
+  if (month >= 9) {
+    return `${year}-${(year + 1).toString().slice(-2)}`;
+  } else if (month <= 4) {
+    return `${year - 1}-${year.toString().slice(-2)}`;
+  } else {
+    // Off-season, return upcoming season
+    return `${year}-${(year + 1).toString().slice(-2)}`;
+  }
+}
+
+const CURRENT_SEASON = getCurrentSeason();
 
 // Map of API team market names to list_of_programs.txt names
 const teamNameMap = new Map<string, string>([
@@ -55,6 +77,13 @@ export async function GET() {
     );
   }
 
+  // Check cache first
+  const cacheKey = 'teams-list';
+  const cachedData = apiCache.get(cacheKey);
+  if (cachedData) {
+    return NextResponse.json(cachedData);
+  }
+
   try {
     const url = `${BASE_URL}/league/teams.json`;    
     const response = await axios.get(url, {
@@ -84,10 +113,15 @@ export async function GET() {
       a.market.localeCompare(b.market, 'en', { sensitivity: 'base' })
     );
 
-    return NextResponse.json({
+    const responseData = {
       season: CURRENT_SEASON,
       teams: sortedTeams
-    });
+    };
+
+    // Cache the response for 5 minutes
+    apiCache.set(cacheKey, responseData, 5 * 60 * 1000);
+
+    return NextResponse.json(responseData);
   } catch (error) {
     const err = error as AxiosError<ApiError>;
     return NextResponse.json(

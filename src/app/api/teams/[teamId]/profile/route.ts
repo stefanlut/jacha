@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import axios, { AxiosError } from 'axios';
 import { NextRequest } from 'next/server';
 import { ApiError, ApiErrorResponse } from '@/app/types';
+import { apiCache } from '@/app/utils/cache';
 
 const API_KEY = process.env.SPORTRADAR_API_KEY;
 const BASE_URL = 'https://api.sportradar.com/ncaamh/trial/v3/en';
@@ -19,6 +20,14 @@ export async function GET(
 
   try {
     const { teamId } = await context.params;
+    
+    // Check cache first
+    const cacheKey = `team-profile-${teamId}`;
+    const cachedData = apiCache.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
+
     const response = await axios.get(
       `${BASE_URL}/teams/${teamId}/profile.json`,
       {
@@ -28,6 +37,9 @@ export async function GET(
         }
       }
     );
+
+    // Cache the response for 10 minutes (team profiles change less frequently)
+    apiCache.set(cacheKey, response.data, 10 * 60 * 1000);
 
     return NextResponse.json(response.data);
   } catch (error) {

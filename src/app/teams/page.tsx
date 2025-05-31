@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TeamSelector from '@/app/components/TeamSelector';
 import TeamProfile from '@/app/components/TeamProfile';
 import Header from '@/app/components/Header';
@@ -8,7 +8,23 @@ import { SportRadarTeam } from '@/app/types';
 
 export default function TeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState<SportRadarTeam | null>(null);
-  const season = '2024-25';  // We'll update this when we implement season selection
+  const [season, setSeason] = useState<string>('Loading...');
+
+  // Get season from API
+  useEffect(() => {
+    const fetchSeason = async () => {
+      try {
+        const response = await fetch('/api/teams');
+        const data = await response.json();
+        setSeason(data.season || 'Unknown Season');
+      } catch (error) {
+        console.error('Failed to fetch season:', error);
+        setSeason('Unknown Season');
+      }
+    };
+
+    fetchSeason();
+  }, []);
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -19,7 +35,10 @@ export default function TeamsPage() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-5">
-          <TeamSelector onTeamSelect={setSelectedTeam} />
+          <TeamSelector 
+            onTeamSelect={setSelectedTeam} 
+            selectedTeam={selectedTeam}
+          />
         </div>
         <div className="md:col-span-7">
           {selectedTeam ? (
