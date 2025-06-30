@@ -30,7 +30,7 @@ function getCurrentSeason(): string {
 
 const CURRENT_SEASON = getCurrentSeason();
 
-// Map of API team market names to list_of_programs.txt names
+// Map of API team market names to program_schedule_sites.csv names
 const teamNameMap = new Map<string, string>([
   ['Massachusetts', 'UMass'],
   ['Connecticut', 'UConn'],
@@ -47,23 +47,23 @@ const teamNameMap = new Map<string, string>([
   ['Saint Thomas', 'St. Thomas'],
   ['St Thomas', 'St. Thomas'],
   ['Army', 'Army West Point'],
-  // Map API names to exact names from list_of_programs.txt
+  // Map API names to exact names from program_schedule_sites.csv
   ['Rochester Institute of Technology', 'Rochester Institute of Technology'],
   ['Northern Michigan', 'Northern Michigan']
 ]);
 
 async function getActivePrograms(): Promise<Set<string>> {
-  const filePath = path.join(process.cwd(), 'public', 'list_of_programs.txt');
+  const filePath = path.join(process.cwd(), 'public', 'program_schedule_sites.csv');
   const content = await fs.readFile(filePath, 'utf-8');
   const lines = content.split('\n')
     .map(line => line.trim())
-    .filter(line => line && !line.startsWith('//'));
+    .filter(line => line && !line.startsWith('//') && line.includes(','));
   
   const programs = new Set<string>();
   for (const line of lines) {
-    const name = line.trim();
-    if (name) {
-      programs.add(name);
+    const [teamName] = line.split(',').map(s => s.trim());
+    if (teamName) {
+      programs.add(teamName);
     }
   }
   return programs;

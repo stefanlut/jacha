@@ -72,3 +72,42 @@ export interface ApiErrorResponse {
   details?: string;
   apiError?: unknown;
 }
+
+// Schedule-related types
+export interface ScheduleGame {
+  id: string;
+  date: Date;
+  opponent: string;
+  isHome: boolean;
+  venue?: string;
+  city?: string;
+  state?: string;
+  time?: string;
+  conference?: boolean;
+  exhibition?: boolean;
+  status: 'scheduled' | 'completed' | 'postponed' | 'cancelled';
+  result?: {
+    score: string;
+    won: boolean;
+  };
+  broadcastInfo?: {
+    network?: string;
+    watchLink?: string;
+    statsLink?: string;
+    ticketsLink?: string;
+  };
+}
+
+export interface TeamSchedule {
+  teamName: string;
+  season: string;
+  record: {
+    overall: string;
+    conference: string;
+    home: string;
+    away: string;
+    neutral: string;
+  };
+  games: ScheduleGame[];
+  lastUpdated: Date;
+}

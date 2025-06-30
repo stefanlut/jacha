@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { SportRadarTeam, TeamProfileData } from '@/app/types';
+import TeamScheduleComponent from './TeamSchedule';
 import axios from 'axios';
 
 interface TeamProfileProps {
@@ -13,6 +14,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [activeTab, setActiveTab] = useState<'profile' | 'schedule'>('profile');
 
   useEffect(() => {
     const fetchTeamProfile = async () => {
@@ -92,6 +94,47 @@ export default function TeamProfile({ team }: TeamProfileProps) {
         )}
       </div>
 
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 mb-6 border-b">
+        <button
+          onClick={() => setActiveTab('profile')}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'profile'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Team Profile
+        </button>
+        <button
+          onClick={() => setActiveTab('schedule')}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'schedule'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Schedule
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'profile' ? (
+        <ProfileTabContent profileData={profileData} />
+      ) : (
+        <TeamScheduleComponent 
+          teamId={team.id} 
+          teamName={team.market}
+        />
+      )}
+    </div>
+  );
+}
+
+// Separate component for profile tab content
+function ProfileTabContent({ profileData }: { profileData: TeamProfileData }) {
+  return (
+    <div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Team Info */}
         <div className="space-y-6">
