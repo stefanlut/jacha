@@ -96,8 +96,6 @@ export class HockeyScheduleScraper {
           response = await axios.get(url, strategies[i]);
           break;
         } catch (error) {
-          const axiosError = error as { response?: { status: number }; message: string };
-          console.log(`Request strategy ${i + 1} failed for ${teamName}:`, axiosError.response?.status || axiosError.message);
           lastError = error;
           
           // Wait a bit before trying the next strategy
@@ -115,21 +113,18 @@ export class HockeyScheduleScraper {
       
       // Enhanced format detection system using team names and URL patterns
       const formatResult = this.detectWebsiteFormat(url, teamName, $);
-      console.log(`Detected format for ${teamName}: ${formatResult.format} (confidence: ${formatResult.confidence})`);
       
       // Try the detected format first
       let schedule = await this.tryFormatParser(formatResult.format, $, teamName);
       
       // If that fails and confidence is low, try fallback methods
       if (!schedule && formatResult.confidence < 0.8) {
-        console.log(`Primary format failed for ${teamName}, trying fallback methods...`);
         schedule = await this.tryAllParsers($, teamName);
       }
       
       return schedule;
       
-    } catch (error) {
-      console.error(`Error scraping schedule for ${teamName}:`, error);
+    } catch {
       return null;
     }
   }
@@ -139,6 +134,7 @@ export class HockeyScheduleScraper {
     if (url.includes('thesundevils.com')) return { format: 'arizona-state', confidence: 1.0 };
     if (url.includes('goterriers.com')) return { format: 'boston-university', confidence: 1.0 };
     if (url.includes('ferrisstatebulldogs.com')) return { format: 'ferris-state', confidence: 1.0 };
+    if (url.includes('goairforcefalcons.com')) return { format: 'air-force', confidence: 1.0 };
     
     // Team name-based detection for known patterns
     const teamPatterns: { [key: string]: { format: string, confidence: number } } = {
@@ -146,6 +142,8 @@ export class HockeyScheduleScraper {
       'Boston University': { format: 'sidearm-sports', confidence: 0.9 },
       'Boston College': { format: 'sidearm-sports', confidence: 0.8 },
       'Ferris State': { format: 'ferris-state', confidence: 0.9 },
+      'UMass': { format: 'umass', confidence: 0.9 },
+      'Air Force': { format: 'air-force', confidence: 0.9 },
       'Michigan': { format: 'big-ten', confidence: 0.7 },
       'Michigan State': { format: 'big-ten', confidence: 0.7 },
       'Ohio State': { format: 'big-ten', confidence: 0.7 },
@@ -186,6 +184,12 @@ export class HockeyScheduleScraper {
         case 'ferris-state':
           schedule = this.scrapeFerrisStateSchedule($, teamName || 'Ferris State');
           break;
+        case 'umass':
+          schedule = this.scrapeUMassSchedule($, teamName || 'UMass');
+          break;
+        case 'air-force':
+          schedule = this.scrapeAirForceSchedule($, teamName || 'Air Force');
+          break;
         case 'sidearm-sports':
         case 'boston-university':
           schedule = this.scrapeSidearmSchedule($, teamName || 'Unknown Team');
@@ -203,16 +207,13 @@ export class HockeyScheduleScraper {
       if (schedule && this.isValidCurrentSeason(schedule.season) && schedule.games.length > 0) {
         return schedule;
       } else if (schedule && this.isValidCurrentSeason(schedule.season) && schedule.games.length === 0) {
-        console.warn(`${teamName} schedule shows correct season ${schedule.season} but has 0 games - likely incomplete or offseason`);
         return null;
       } else if (schedule) {
-        console.warn(`Rejecting ${teamName} schedule: season ${schedule.season} is not current (need 2025-26)`);
         return null;
       }
       
       return null;
-    } catch (error) {
-      console.error(`Error with ${format} parser:`, error);
+    } catch {
       return null;
     }
   }
@@ -223,7 +224,6 @@ export class HockeyScheduleScraper {
     
     // Reject offseason marker
     if (season === 'offseason') {
-      console.log('Season marked as offseason, rejecting');
       return false;
     }
     
@@ -234,7 +234,6 @@ export class HockeyScheduleScraper {
     // Check if it's a valid hockey season format (YYYY-YY where YY = YY+1)
     const seasonMatch = season.match(/^(\d{4})-(\d{2})$/);
     if (!seasonMatch) {
-      console.log(`Invalid season format: ${season}, expected YYYY-YY format`);
       return false;
     }
     
@@ -245,7 +244,6 @@ export class HockeyScheduleScraper {
     // Validate that it's a proper hockey season (start year + 1 = end year)
     const expectedEndYear = (startYearNum + 1) % 100;
     if (endYearTwoDigit_Num !== expectedEndYear) {
-      console.log(`Invalid hockey season: ${season}, ${startYear} should be followed by ${expectedEndYear.toString().padStart(2, '0')}`);
       return false;
     }
     
@@ -255,13 +253,13 @@ export class HockeyScheduleScraper {
     }
     
     // Reject old seasons (2024-25 and earlier)
-    console.log(`Season ${season} is too old, we need ${targetSeason} or newer`);
     return false;
   }
 
   private async tryAllParsers($: cheerio.CheerioAPI, teamName?: string): Promise<TeamSchedule | null> {
     const parsers = [
       { name: 'sidearm-sports', func: () => this.scrapeSidearmSchedule($, teamName || 'Unknown Team') },
+      { name: 'umass', func: () => this.scrapeUMassSchedule($, teamName || 'Unknown Team') },
       { name: 'ferris-state', func: () => this.scrapeFerrisStateSchedule($, teamName || 'Unknown Team') },
       { name: 'arizona-state', func: () => this.scrapeArizonaStateSchedule($, teamName || 'Unknown Team') },
       { name: 'big-ten', func: () => this.scrapeBigTenSchedule($, teamName || 'Unknown Team') },
@@ -270,23 +268,19 @@ export class HockeyScheduleScraper {
 
     for (const parser of parsers) {
       try {
-        console.log(`Trying ${parser.name} parser for ${teamName}...`);
         const result = parser.func();
         
         if (result && result.games && result.games.length > 0 && this.isValidCurrentSeason(result.season)) {
-          console.log(`Success with ${parser.name} parser: ${result.games.length} games found for ${result.season}`);
           return result;
         } else if (result && result.season === 'offseason') {
-          console.log(`${parser.name} parser detected offseason for ${teamName} - likely showing old schedule`);
           // Continue trying other parsers in case one can find current data
         } else if (result && this.isValidCurrentSeason(result.season) && result.games.length === 0) {
-          console.log(`${parser.name} parser found correct season ${result.season} but 0 games - likely offseason`);
+          // Continue trying other parsers
         } else if (result && !this.isValidCurrentSeason(result.season)) {
-          console.log(`${parser.name} parser found schedule but wrong season: ${result.season}`);
+          // Continue trying other parsers
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.log(`${parser.name} parser failed:`, errorMessage);
+      } catch {
+        // Continue trying other parsers
       }
     }
 
@@ -301,7 +295,6 @@ export class HockeyScheduleScraper {
     
     // If no valid season found or old season detected, return null to indicate offseason
     if (!season) {
-      console.log(`${teamName}: No valid current season found, likely showing old schedule`);
       return {
         teamName,
         season: 'offseason',
@@ -327,39 +320,152 @@ export class HockeyScheduleScraper {
     
     let gameIndex = 0;
     
-    // Process each section that starts with a date
-    for (let i = 1; i < textSections.length; i += 2) {
-      const datePart = textSections[i]; // The date (captured group)
-      const contentPart = textSections[i + 1]; // The content after the date
+    // Check if this is Minnesota (which has a different format)
+    if (teamName.toLowerCase().includes('minnesota') && !teamName.includes('State') && !teamName.includes('Duluth')) {
       
-      if (!datePart || !contentPart) continue;
+      // Minnesota has format: vs[Opponent]3M Arena at Mariucci[Date] or at[Opponent][Location][Date]
+      // Also handle neutral site games and exhibitions
+      const gamePatterns = normalizedText.match(/((vs|at)[A-Za-z\s&().''-]+?(?:3M Arena at Mariucci|[A-Z][a-z]+,\s*[A-Z]{2})[A-Z][a-z]{2}\s+\d{1,2}\s+\([A-Z][a-z]{2}\))/g);
       
-      // Look for vs/at pattern in this specific section - handle ESPN+HEA * and other prefixes
-      let vsAtMatch = contentPart.match(/\*\s+(vs|at)\s+(.+?)(?=\s*(?:ESPN|Watch|Listen|Tickets|Game|$))/i);
+      // Also look for neutral site games and exhibitions that might not follow the standard pattern
+      // Pattern like: "TBDDenverDenver, CO (Ball Arena)Nov 28 (Fri) TBD"
+      const neutralSitePatterns = normalizedText.match(/TBD([A-Z][A-Za-z\s&().''-]+?)([A-Z][a-z]+,\s*[A-Z]{2}.*?)([A-Z][a-z]{2}\s+\d{1,2}\s+\([A-Z][a-z]{2}\))/g);
       
-      // If no * pattern found, try the regular pattern
-      if (!vsAtMatch) {
-        vsAtMatch = contentPart.match(/\s+(vs|at)\s+(.+?)(?=\s*(?:ESPN|Watch|Listen|Tickets|Game|$))/i);
-      }
+      // Pattern for exhibitions: "TBDatBemidji StateBemidji, MN(Exhibition)Jan 2 (Fri) TBD"
+      const exhibitionPatterns = normalizedText.match(/TBD(at|vs)([A-Z][A-Za-z\s&().''-]+?)([A-Z][a-z]+,\s*[A-Z]{2}[^A-Z]*?\(Exhibition\))([A-Z][a-z]{2}\s+\d{1,2}\s+\([A-Z][a-z]{2}\))/g);
       
-      if (vsAtMatch) {
-        // Create a synthetic match array for our existing parser
-        const syntheticMatch = [
-          `${datePart} ${vsAtMatch[0]}`, // Full match
-          datePart,                      // Date part
-          vsAtMatch[1],                  // vs/at
-          vsAtMatch[2]                   // Opponent
-        ];
+      // Combine all patterns
+      const allPatterns = [
+        ...(gamePatterns || []),
+        ...(neutralSitePatterns || []),
+        ...(exhibitionPatterns || [])
+      ];
+      
+      if (allPatterns.length > 0) {
         
-        const game = this.parseGameFromMatch(syntheticMatch as RegExpMatchArray, gameIndex);
-        if (game) {
-          games.push(game);
-          gameIndex++;
+        allPatterns.forEach((gamePattern) => {
+          // Extract components from each game pattern
+          let homeAwayMatch, opponent, datePart, isExhibition = false, isNeutralSite = false;
+          
+          if (gamePattern.includes('3M Arena at Mariucci')) {
+            // Home games: vs[Opponent]3M Arena at Mariucci[Date]
+            const homeMatch = gamePattern.match(/(vs)([^3]+?)3M Arena at Mariucci([A-Z][a-z]{2}\s+\d{1,2}\s+\([A-Z][a-z]{2}\))/);
+            if (homeMatch) {
+              homeAwayMatch = homeMatch[1];
+              opponent = homeMatch[2].trim();
+              datePart = homeMatch[3];
+            }
+          } else if (gamePattern.includes('(Exhibition)')) {
+            // Exhibition games: TBDat[Opponent][Location](Exhibition)[Date]
+            const exhibitionMatch = gamePattern.match(/TBD(at|vs)([A-Z][A-Za-z\s&().''-]+?)([A-Z][a-z]+,\s*[A-Z]{2}[^A-Z]*?\(Exhibition\))([A-Z][a-z]{2}\s+\d{1,2}\s+\([A-Z][a-z]{2}\))/);
+            if (exhibitionMatch) {
+              homeAwayMatch = exhibitionMatch[1];
+              opponent = exhibitionMatch[2].trim();
+              datePart = exhibitionMatch[4];
+              isExhibition = true;
+            }
+          } else if (gamePattern.startsWith('TBD') && !gamePattern.includes('at') && !gamePattern.includes('vs')) {
+            // Neutral site games: TBD[Opponent][Location][Date]
+            const neutralMatch = gamePattern.match(/TBD([A-Z][A-Za-z\s&().''-]+?)([A-Z][a-z]+,\s*[A-Z]{2}.*?)([A-Z][a-z]{2}\s+\d{1,2}\s+\([A-Z][a-z]{2}\))/);
+            if (neutralMatch) {
+              homeAwayMatch = 'vs'; // Treat neutral as home for simplicity
+              opponent = neutralMatch[1].trim();
+              datePart = neutralMatch[3];
+              isNeutralSite = true;
+            }
+          } else {
+            // Away games: at[Opponent][Location][Date]
+            const awayMatch = gamePattern.match(/(at)([A-Za-z\s&().''-]+?)([A-Z][a-z]+,\s*[A-Z]{2})([A-Z][a-z]{2}\s+\d{1,2}\s+\([A-Z][a-z]{2}\))/);
+            if (awayMatch) {
+              homeAwayMatch = awayMatch[1];
+              opponent = awayMatch[2].trim();
+              
+              // Clean up opponent name - remove location fragments that got concatenated
+              // Handle specific cases like "North DakotaGrand" -> "North Dakota"
+              opponent = opponent.replace(/Grand\s*$/, ''); // Remove trailing "Grand" 
+              opponent = opponent.replace(/Forks\s*$/, ''); // Remove trailing "Forks"
+              opponent = opponent.replace(/Arena.*$/, ''); // Remove "Arena" and anything after
+              opponent = opponent.replace(/Center.*$/, ''); // Remove "Center" and anything after
+              opponent = opponent.replace(/Rink.*$/, ''); // Remove "Rink" and anything after
+              opponent = opponent.replace(/Ice.*$/, ''); // Remove "Ice" and anything after
+              opponent = opponent.replace(/Stadium.*$/, ''); // Remove "Stadium" and anything after
+              opponent = opponent.replace(/Hall.*$/, ''); // Remove "Hall" and anything after
+              
+              // Also handle cases where location words got concatenated without spaces
+              opponent = opponent.replace(/Grand$/, ''); // Remove "Grand" at end (no space)
+              opponent = opponent.replace(/Forks$/, ''); // Remove "Forks" at end (no space)
+              
+              opponent = opponent.trim();
+              
+              datePart = awayMatch[4]; // Skip the location part (awayMatch[3])
+            }
+          }
+          
+          if (homeAwayMatch && opponent && datePart && opponent.length > 1) {
+            const syntheticMatch = [
+              `${datePart} ${homeAwayMatch} ${opponent}`,
+              datePart,
+              homeAwayMatch,
+              opponent
+            ];
+            
+            const game = this.parseGameFromMatch(syntheticMatch as RegExpMatchArray, gameIndex, teamName);
+            if (game) {
+              // Mark exhibitions and neutral site games
+              if (isExhibition) {
+                game.exhibition = true;
+              }
+              if (isNeutralSite) {
+                game.isHome = false; // Neutral site games are typically considered away
+                game.venue = 'Neutral Site';
+              }
+              
+              games.push(game);
+              gameIndex++;
+            }
+          }
+        });
+      } else {
+        // Fallback: try simpler pattern matching
+        const vsMatches = normalizedText.match(/(vs|at)([^3]+?)3M Arena/g);
+        if (vsMatches) {
+          // Would need date matching as well - but the complete pattern above should work
+        }
+      }
+    } else {
+      // Use the original split-by-date approach for other teams
+      // Process each section that starts with a date
+      for (let i = 1; i < textSections.length; i += 2) {
+        const datePart = textSections[i]; // The date (captured group)
+        const contentPart = textSections[i + 1]; // The content after the date
+        
+        if (!datePart || !contentPart) continue;
+        
+        // Look for vs/at pattern in this specific section - handle ESPN+HEA * and other prefixes
+        let vsAtMatch = contentPart.match(/\*\s+(vs|at)\s+(.+?)(?=\s*(?:ESPN|Watch|Listen|Tickets|Game|Exhibition|\bAHA\s*\*|\bHistory\s+vs\b|\bWinter\s+Carnival\b|\b3M\s+Arena\b|\bConte\s+Forum\b|\bAgganis\s+Arena\b|\b[A-Z][a-z]+,\s*[A-Z]{2}\b|\bArena\b|\bCenter\b|\bRink\b|\bIce\s+Arena|$))/i);
+        
+        // If no * pattern found, try the regular pattern
+        if (!vsAtMatch) {
+          vsAtMatch = contentPart.match(/\s+(vs|at)\s+(.+?)(?=\s*(?:ESPN|Watch|Listen|Tickets|Game|Exhibition|\bAHA\s*\*|\bHistory\s+vs\b|\bWinter\s+Carnival\b|\b3M\s+Arena\b|\bConte\s+Forum\b|\bAgganis\s+Arena\b|\b[A-Z][a-z]+,\s*[A-Z]{2}\b|\bArena\b|\bCenter\b|\bRink\b|\bIce\s+Arena|$))/i);
+        }
+        
+        if (vsAtMatch) {
+          // Create a synthetic match array for our existing parser
+          const syntheticMatch = [
+            `${datePart} ${vsAtMatch[0]}`, // Full match
+            datePart,                      // Date part
+            vsAtMatch[1],                  // vs/at
+            vsAtMatch[2]                   // Opponent
+          ];
+          
+          const game = this.parseGameFromMatch(syntheticMatch as RegExpMatchArray, gameIndex, teamName);
+          if (game) {
+            games.push(game);
+            gameIndex++;
+          }
         }
       }
     }
-
-    console.log('Total games found via split method:', games.length);
 
     // Remove any remaining duplicates
     const uniqueGames = this.removeDuplicateGames(games);
@@ -379,7 +485,6 @@ export class HockeyScheduleScraper {
     
     // If no valid season found or old season detected, return null to indicate offseason
     if (!season) {
-      console.log(`${teamName}: No valid current season found, likely showing old schedule`);
       return {
         teamName,
         season: 'offseason',
@@ -401,7 +506,6 @@ export class HockeyScheduleScraper {
     if (scheduleEventsIndex !== -1) {
       // Extract just the schedule events section
       relevantText = textContent.substring(scheduleEventsIndex, scheduleEventsIndex + 3000);
-      console.log('Arizona State schedule events section:', relevantText.substring(0, 800));
     }
     
     // Try multiple patterns to catch Arizona State's format
@@ -420,11 +524,8 @@ export class HockeyScheduleScraper {
     const vsAtMatches = relevantText.match(/(vs\.|at)\s+(.+?)(?=Event details|Show Event Info|Season opener|\s+[A-Z][a-z]{2}\d|\s*$)/g);
     
     if (vsAtMatches) {
-      console.log('Arizona State vs/at matches found:', vsAtMatches.length);
-      
       // Extract dates separately
       const dateMatches = relevantText.match(/([A-Z][a-z]{2})(\d{1,2})\([A-Z][a-z]{2}\)/g);
-      console.log('Arizona State date matches found:', dateMatches?.length || 0);
       
       if (dateMatches && vsAtMatches.length <= dateMatches.length) {
         for (let i = 0; i < Math.min(vsAtMatches.length, dateMatches.length); i++) {
@@ -482,7 +583,6 @@ export class HockeyScheduleScraper {
             const gameDate = new Date(dateString);
             
             if (isNaN(gameDate.getTime())) {
-              console.warn('Invalid date for Arizona State game:', dateString);
               continue;
             }
             
@@ -491,7 +591,7 @@ export class HockeyScheduleScraper {
               date: gameDate,
               opponent: cleanOpponent,
               isHome: homeAway.includes('vs'),
-              conference: false,
+              conference: this.isConferenceGame(teamName, cleanOpponent),
               exhibition: false,
               status: 'scheduled' as const,
               broadcastInfo: {}
@@ -500,10 +600,8 @@ export class HockeyScheduleScraper {
             games.push(game);
             gameIndex++;
             
-            console.log(`Arizona State game found: ${dateString} ${homeAway} ${cleanOpponent}`);
-            
-          } catch (error) {
-            console.error('Error parsing Arizona State game:', error);
+          } catch {
+            // Continue processing other games
           }
         }
       }
@@ -558,7 +656,6 @@ export class HockeyScheduleScraper {
             const gameDate = new Date(dateString);
             
             if (isNaN(gameDate.getTime())) {
-              console.warn('Invalid date for Arizona State game:', dateString);
               continue;
             }
             
@@ -567,7 +664,7 @@ export class HockeyScheduleScraper {
               date: gameDate,
               opponent: cleanOpponent,
               isHome: homeAway.includes('vs'),
-              conference: false,
+              conference: this.isConferenceGame(teamName, cleanOpponent),
               exhibition: false,
               status: 'scheduled' as const,
               broadcastInfo: {}
@@ -576,10 +673,8 @@ export class HockeyScheduleScraper {
             games.push(game);
             gameIndex++;
             
-            console.log(`Arizona State game found: ${dateString} ${homeAway} ${cleanOpponent}`);
-            
-          } catch (error) {
-            console.error('Error parsing Arizona State game:', error, match);
+          } catch {
+            // Continue processing other matches
           }
         }
         
@@ -587,8 +682,6 @@ export class HockeyScheduleScraper {
         if (games.length > 0) break;
       }
     }
-    
-    console.log(`Arizona State total games found: ${games.length}`);
     
     return {
       teamName,
@@ -605,7 +698,6 @@ export class HockeyScheduleScraper {
     
     // If no valid season found or old season detected, return null to indicate offseason
     if (!season) {
-      console.log(`${teamName}: No valid current season found, likely showing old schedule`);
       return {
         teamName,
         season: 'offseason',
@@ -618,70 +710,507 @@ export class HockeyScheduleScraper {
     const record = this.extractRecord($);
 
     // Parse Ferris State's specific schedule format
-    const elements = $('div, li, article').filter((i, el) => {
-      const text = $(el).text().toLowerCase();
-      return text.includes('vs') || text.includes('at') || text.includes('@');
+    // The structure has dates and opponents in separate but related elements
+    
+    // Find all date elements first
+    const datePattern = /^([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)$/;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dateElements: Array<{element: any, date: string, month: string, day: string, dow: string}> = [];
+    
+    $('*').each((i, elem) => {
+      const text = $(elem).text().trim();
+      const match = text.match(datePattern);
+      if (match && text.length < 30) { // Ensure it's just a date, not mixed content
+        dateElements.push({
+          element: elem,
+          date: text,
+          month: match[1],
+          day: match[2],
+          dow: match[3]
+        });
+      }
     });
     
-    let currentDate = '';
-    let currentTime = '';
+    // Now find all AT/VS elements and try to pair them with dates
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const opponentElements: Array<{element: any, text: string, homeAway: string, opponent: string}> = [];
     
-    // Look for specific patterns in the Ferris State schedule
-    elements.each((i, elem) => {
-      const elemText = $(elem).text().trim();
-      
-      // Check if this is a date element (e.g., "Oct 03 (Fri)", "Nov 01 (Sat)")
-      const dateMatch = elemText.match(/^([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)$/);
-      if (dateMatch) {
-        currentDate = elemText;
-        return;
-      }
-      
-      // Check if this is a time element (e.g., "6:07 PM EDT")
-      const timeMatch = elemText.match(/^(\d{1,2}:\d{2}\s+(AM|PM)\s+(EDT|EST))$/);
-      if (timeMatch) {
-        currentTime = elemText;
-        return;
-      }
-      
-      // Check if this is an opponent element (e.g., "AT Miami (Ohio)", "VS Western Michigan")
-      const opponentMatch = elemText.match(/^(AT|VS)\s+(.+?)(?:\s*[#*%].*)?$/);
-      if (opponentMatch && currentDate) {
-        const isHome = opponentMatch[1] === 'VS';
-        const opponent = opponentMatch[2].trim();
+    $('*').each((i, elem) => {
+      const text = $(elem).text().trim();
+      // Match AT or VS patterns with flexible whitespace
+      const match = text.match(/^(AT|VS)[\s\t\n]+(.+?)(?:[\s\t\n]*[#*%].*)?$/);
+      if (match) {
+        const homeAway = match[1];
+        let opponent = match[2].trim();
         
-        try {
-          // Parse the date
-          const dateObj = this.parseGameDate(currentDate, currentTime);
-          
-          const game: ScheduleGame = {
-            id: `ferris-${games.length + 1}`,
-            date: dateObj,
-            opponent: opponent,
-            isHome: isHome,
-            conference: elemText.includes('*') || elemText.includes('CCHA'),
-            exhibition: elemText.includes('#'),
-            status: 'scheduled' as const,
-            broadcastInfo: {}
-          };
-          
-          games.push(game);
-          
-          // Reset for next game
-          currentDate = '';
-          currentTime = '';
-          
-        } catch (error) {
-          console.log(`Error parsing Ferris State game date: ${error}`);
+        // Clean up opponent name - remove extra whitespace and tabs
+        opponent = opponent.replace(/[\s\t\n]+/g, ' ').trim();
+        
+        // Skip tournament entries that are too generic
+        if (opponent.length > 2 && !opponent.match(/^(TBA|TBD)$/)) {
+          opponentElements.push({
+            element: elem,
+            text: text,
+            homeAway: homeAway,
+            opponent: opponent
+          });
         }
       }
     });
+    
+    // Try to pair dates with opponents based on document order and proximity
+    let gameIndex = 0;
+    const usedOpponents = new Set<number>();
+    
+    for (const dateEl of dateElements) {
+      let bestOpponent = null;
+      let bestDistance = Infinity;
+      let bestOpponentIndex = -1;
+      
+      // Find the closest unused opponent element after this date
+      for (let i = 0; i < opponentElements.length; i++) {
+        if (usedOpponents.has(i)) continue;
+        
+        const opponentEl = opponentElements[i];
+        
+        // Calculate DOM distance (rough approximation)
+        const dateIndex = $(dateEl.element).index();
+        const opponentIndex = $(opponentEl.element).index();
+        const distance = Math.abs(opponentIndex - dateIndex);
+        
+        // Prefer opponents that come after the date
+        if (opponentIndex > dateIndex && distance < bestDistance) {
+          bestDistance = distance;
+          bestOpponent = opponentEl;
+          bestOpponentIndex = i;
+        }
+      }
+      
+      if (bestOpponent && bestOpponentIndex !== -1) {
+        try {
+          // Parse the date
+          const month = this.getMonthNumber(dateEl.month);
+          const day = parseInt(dateEl.day);
+          const year = month >= 8 ? 2025 : 2026; // Hockey season spans two calendar years
+          const gameDate = new Date(year, month, day);
+          
+          if (!isNaN(gameDate.getTime())) {
+            const game: ScheduleGame = {
+              id: `ferris-${gameIndex}`,
+              date: gameDate,
+              opponent: bestOpponent.opponent,
+              isHome: bestOpponent.homeAway === 'VS',
+              conference: this.isConferenceGame(teamName, bestOpponent.opponent) || 
+                         bestOpponent.text.includes('*') || 
+                         bestOpponent.text.includes('CCHA'),
+              exhibition: bestOpponent.text.includes('#'),
+              status: 'scheduled' as const,
+              broadcastInfo: {}
+            };
+            
+            games.push(game);
+            usedOpponents.add(bestOpponentIndex);
+            gameIndex++;
+            
+          }
+        } catch {
+          // Continue processing other games
+        }
+      }
+    }
 
     return {
       teamName,
       season,
       record,
+      games: games.sort((a, b) => a.date.getTime() - b.date.getTime()),
+      lastUpdated: new Date(),
+    };
+  }
+
+  private scrapeAirForceSchedule($: cheerio.CheerioAPI, teamName: string): TeamSchedule {
+    const games: ScheduleGame[] = [];
+    const season = this.extractSeason($);
+    
+    // If no valid season found or old season detected, return null to indicate offseason
+    if (!season) {
+      return {
+        teamName,
+        season: 'offseason',
+        record: this.extractRecord($),
+        games: [],
+        lastUpdated: new Date(),
+      };
+    }
+    
+    const record = this.extractRecord($);
+
+    // Air Force uses .s-game-card elements with a specific format
+    // Pattern: "atUniversity of Nebraska at OmahaOmaha, NEOct 3 (Fri) TBA"
+    const gameCards = $('.s-game-card');
+    
+    gameCards.each((index, element) => {
+      try {
+        const $element = $(element);
+        const fullText = $element.text().trim();
+        
+        // Air Force format has date at the end: "...Oct 3 (Fri) TBA"
+        // Look for the date pattern at the end: Month Day (DayOfWeek) [Time]
+        const dateMatch = fullText.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})\s*\(([A-Z][a-z]{2})\)\s*(.*)$/i);
+        
+        if (!dateMatch) {
+          return;
+        }
+        
+        const [, month, day, , timeInfo] = dateMatch;
+        
+        // Extract the text before the date to get opponent info
+        const beforeDate = fullText.substring(0, fullText.lastIndexOf(month)).trim();
+        
+        // Look for "at" or "vs" pattern to determine home/away and opponent
+        let homeAway = '';
+        let opponent = '';
+        const venue = '';
+        let city = '';
+        let state = '';
+        
+        if (beforeDate.startsWith('at')) {
+          homeAway = 'at';
+          const afterAt = beforeDate.substring(2).trim();
+          
+          // The format appears to be: "atTeamNameCityName, StateDate"
+          // We need to find where the team name ends and the city begins
+          // Look for the last occurrence of a pattern like "City, ST"
+          const cityStatePattern = /(.+?)([A-Z][a-z\s]*(?:\s+[A-Z][a-z]*)*),\s*([A-Z]{2})$/;
+          const match = afterAt.match(cityStatePattern);
+          
+          if (match) {
+            const [, teamAndCity, cityPart, statePart] = match;
+            state = statePart;
+            city = cityPart.trim();
+            
+            // Handle special cases where city name might appear in team name
+            let teamName = teamAndCity;
+            
+            // For teams like "University of Nebraska at Omaha" + "Omaha, NE"
+            // The team name contains the city name, so we need to be more careful
+            
+            // If the city appears multiple times, we want to keep it in the team name
+            // but remove only the last occurrence that's part of the location
+            
+            // Simple heuristic: if team name ends with city name and there's no space,
+            // it's likely concatenated (like "TeamNameCityName")
+            if (teamName.endsWith(city) && !teamName.endsWith(' ' + city)) {
+              // This suggests concatenation like "RITRochester" -> "RIT"
+              teamName = teamName.substring(0, teamName.length - city.length).trim();
+            }
+            // If it ends with " " + city, it might be part of the team name, so keep it
+            
+            opponent = teamName;
+          } else {
+            // Fallback - just use everything as opponent name
+            opponent = afterAt;
+          }
+        } else if (beforeDate.startsWith('vs')) {
+          homeAway = 'vs';
+          const afterVs = beforeDate.substring(2).trim();
+          
+          // For home games, the pattern might be "vsOpponentUSAFA, CO"
+          // Remove USAFA and any location info since it's a home game
+          opponent = afterVs
+            .replace(/USAFA,?\s*[A-Z]{2}$/i, '') // Remove "USAFA, CO" or "USAFA"
+            .replace(/,\s*[A-Z]{2}$/, '') // Remove any remaining state
+            .trim();
+        } else {
+          return;
+        }
+        
+        // Clean up opponent name further
+        opponent = opponent
+          .replace(/,\s*[A-Z]{2}$/, '') // Remove trailing state
+          .replace(/USAFA$/, '') // Remove trailing USAFA
+          .replace(/USAFA,?\s*[A-Z]{2}$/, '') // Remove USAFA with state
+          .trim();
+        
+        if (!opponent || opponent.length < 2) {
+          return;
+        }
+        
+        // Parse date
+        const currentYear = new Date().getFullYear();
+        const gameYear = ['Jan', 'Feb', 'Mar', 'Apr'].includes(month) ? currentYear + 1 : currentYear;
+        const dateString = `${month} ${day}, ${gameYear}`;
+        const gameDate = new Date(dateString);
+        
+        if (isNaN(gameDate.getTime())) {
+          return;
+        }
+        
+        // Check for duplicates
+        const isDuplicate = games.some(game => 
+          game.opponent === opponent && 
+          game.date.getTime() === gameDate.getTime() &&
+          game.isHome === (homeAway === 'vs')
+        );
+        
+        if (isDuplicate) {
+          return;
+        }
+        
+        // Extract time if available and clean it up
+        let time = undefined;
+        if (timeInfo && timeInfo !== 'TBA' && timeInfo.trim() !== '') {
+          // Clean up time info - remove "AHA" or other conference abbreviations
+          const cleanTime = timeInfo.replace(/AHA$/i, '').replace(/TBA$/i, '').trim();
+          if (cleanTime && cleanTime !== 'TBA' && cleanTime !== '') {
+            time = cleanTime;
+          }
+        }
+        
+        const game: ScheduleGame = {
+          id: `game-${index}`,
+          date: gameDate,
+          opponent: opponent,
+          isHome: homeAway === 'vs',
+          venue: venue || undefined,
+          city: city || undefined,
+          state: state || undefined,
+          time: time,
+          conference: this.isConferenceGame(teamName, opponent),
+          exhibition: false,
+          status: 'scheduled' as const,
+          broadcastInfo: {}
+        };
+        
+        games.push(game);
+        
+      } catch {
+        // Continue processing other games
+      }
+    });
+    
+    // Sort games by date
+    games.sort((a, b) => a.date.getTime() - b.date.getTime());
+    
+    return {
+      teamName,
+      season,
+      record,
       games,
+      lastUpdated: new Date(),
+    };
+  }
+
+  private scrapeUMassSchedule($: cheerio.CheerioAPI, teamName: string): TeamSchedule {
+    const games: ScheduleGame[] = [];
+    
+    // For UMass, be more aggressive about finding the season since we know they have 2025-26
+    let season = this.extractSeason($);
+    
+    // If extractSeason fails, manually look for 2025-26 in UMass case
+    if (!season) {
+      const textContent = $.text();
+      const title = $('title').text();
+      
+      // Check if we can find 2025-26 anywhere in the page
+      if (textContent.includes('2025-26') || title.includes('2025-26')) {
+        season = '2025-26';
+      } else {
+        return {
+          teamName,
+          season: 'offseason',
+          record: this.extractRecord($),
+          games: [],
+          lastUpdated: new Date(),
+        };
+      }
+    }
+    
+    const record = this.extractRecord($);
+
+    // UMass uses a specific format where games are in the full text content
+    const textContent = $.text();
+    
+    // Find the actual schedule content section (not just the title)
+    // Look for a pattern that indicates actual game data
+    let relevantText = textContent;
+    const gameContentIndex = textContent.indexOf('vsNorthern Michigan');
+    if (gameContentIndex !== -1) {
+      // Extract from the first game onwards, with plenty of context
+      relevantText = textContent.substring(gameContentIndex - 100, gameContentIndex + 10000);
+    } else {
+      // Fallback: look for any "vs" pattern followed by a team name
+      const fallbackIndex = textContent.search(/vs[A-Z][a-z]/);
+      if (fallbackIndex !== -1) {
+        relevantText = textContent.substring(fallbackIndex - 100, fallbackIndex + 10000);
+      }
+    }
+    
+    let gameIndex = 0;
+    
+    // UMass has very specific patterns like:
+    // "vsNorthern MichiganMullins CenterAmherst, Mass.Oct 4 (Sat)HOME OPENER"
+    // "atStonehillNorth Easton, Mass.Oct 10 (Fri)"
+    // "OmahaOmaha, Neb.Oct 24 (Fri)"
+    
+    // Pattern 1: vs games with venue - "vs[Team]Mullins Center...Oct 4 (Sat)"
+    const homeGamePattern = /vs([A-Z][A-Za-z\s&().''-]+?)Mullins Center.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g;
+    
+    let match;
+    while ((match = homeGamePattern.exec(relevantText)) !== null) {
+      try {
+        const [, opponent, month, day] = match;
+        
+        // Clean up opponent name
+        const cleanOpponent = opponent.trim()
+          .replace(/\s+$/, '');
+        
+        if (cleanOpponent.length < 2) continue;
+        
+        // Parse date
+        const monthNum = this.getMonthNumber(month);
+        const dayNum = parseInt(day);
+        const year = monthNum >= 8 ? 2025 : 2026;
+        const gameDate = new Date(year, monthNum, dayNum);
+        
+        if (!isNaN(gameDate.getTime())) {
+          // Check for duplicates
+          const isDuplicate = games.some(game => 
+            game.opponent === cleanOpponent && 
+            game.date.getTime() === gameDate.getTime()
+          );
+          
+          if (!isDuplicate) {
+            const game: ScheduleGame = {
+              id: `umass-${gameIndex}`,
+              date: gameDate,
+              opponent: cleanOpponent,
+              isHome: true,
+              conference: this.isConferenceGame(teamName, cleanOpponent),
+              exhibition: false,
+              status: 'scheduled' as const,
+              broadcastInfo: {}
+            };
+            
+            games.push(game);
+            gameIndex++;
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+    
+    // Pattern 2: at games - search for "at" followed by team names directly
+    // Examples: "atStonehillNorth Easton, Mass.Oct 10 (Fri)"
+    //           "atBoston CollegeChestnut Hill, Mass.Nov 14 (Fri)"
+    const awayGamePatterns = [
+      /atStonehill.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+      /atBoston College.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+      /atProvidence.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+      /atArmy.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+      /atUMass Lowell.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+      /atNew Hampshire.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+      /atUConn.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+      /atVermont.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g,
+    ];
+    
+    const awayOpponents = [
+      'Stonehill', 'Boston College', 'Providence', 'Army', 'UMass Lowell', 
+      'New Hampshire', 'UConn', 'Vermont'
+    ];
+    
+    // Try specific patterns
+    for (let i = 0; i < awayGamePatterns.length; i++) {
+      const pattern = awayGamePatterns[i];
+      const opponent = awayOpponents[i];
+      
+      while ((match = pattern.exec(relevantText)) !== null) {
+        try {
+          const [, month, day] = match;
+          
+          // Parse date
+          const monthNum = this.getMonthNumber(month);
+          const dayNum = parseInt(day);
+          const year = monthNum >= 8 ? 2025 : 2026;
+          const gameDate = new Date(year, monthNum, dayNum);
+          
+          if (!isNaN(gameDate.getTime())) {
+            // Check for duplicates
+            const isDuplicate = games.some(game => 
+              game.opponent === opponent && 
+              game.date.getTime() === gameDate.getTime()
+            );
+            
+            if (!isDuplicate) {
+              const game: ScheduleGame = {
+                id: `umass-${gameIndex}`,
+                date: gameDate,
+                opponent: opponent,
+                isHome: false,
+                conference: this.isConferenceGame(teamName, opponent),
+                exhibition: false,
+                status: 'scheduled' as const,
+                broadcastInfo: {}
+              };
+              
+              games.push(game);
+              gameIndex++;
+            }
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
+    
+    // Pattern 3: neutral site or special format - "[Team][Location]Oct 24 (Fri)" (no "at" or "vs")
+    // Handle Omaha specifically since it appears to be neutral site games
+    const omahaPattern = /Omaha.*?([A-Z][a-z]{2})\s+(\d{1,2})\s+\(([A-Z][a-z]{2})\)/g;
+    
+    while ((match = omahaPattern.exec(relevantText)) !== null) {
+      try {
+        const [, month, day] = match;
+        
+        // Parse date
+        const monthNum = this.getMonthNumber(month);
+        const dayNum = parseInt(day);
+        const year = monthNum >= 8 ? 2025 : 2026;
+        const gameDate = new Date(year, monthNum, dayNum);
+        
+        if (!isNaN(gameDate.getTime())) {
+          // Check for duplicates
+          const isDuplicate = games.some(game => 
+            game.opponent === 'Omaha' && 
+            game.date.getTime() === gameDate.getTime()
+          );
+          
+          if (!isDuplicate) {
+            const game: ScheduleGame = {
+              id: `umass-${gameIndex}`,
+              date: gameDate,
+              opponent: 'Omaha',
+              isHome: false, // Away or neutral
+              conference: this.isConferenceGame(teamName, 'Omaha'),
+              exhibition: false,
+              status: 'scheduled' as const,
+              broadcastInfo: {}
+            };
+            
+            games.push(game);
+            gameIndex++;
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return {
+      teamName,
+      season,
+      record,
+      games: games.sort((a, b) => a.date.getTime() - b.date.getTime()),
       lastUpdated: new Date(),
     };
   }
@@ -692,7 +1221,6 @@ export class HockeyScheduleScraper {
     
     // If no valid season found or old season detected, return null to indicate offseason
     if (!season) {
-      console.log(`${teamName}: No valid current season found, likely showing old schedule`);
       return {
         teamName,
         season: 'offseason',
@@ -706,7 +1234,6 @@ export class HockeyScheduleScraper {
 
     // Big Ten schools often use similar formats - try multiple approaches
     const textContent = $.text();
-    console.log(`Big Ten parser for ${teamName} - text sample:`, textContent.substring(0, 500));
     
     // Try to find schedule section
     const scheduleKeywords = ['schedule', 'games', 'opponents'];
@@ -779,18 +1306,14 @@ export class HockeyScheduleScraper {
           games.push(game);
           gameIndex++;
           
-          console.log(`Big Ten game found for ${teamName}: ${dateString} ${homeAway} ${cleanOpponent}`);
-          
-        } catch (error) {
-          console.error('Error parsing Big Ten game:', error);
+        } catch {
+          // Continue processing other games
         }
       }
       
       if (games.length > 0) break; // Stop if we found games with this pattern
     }
-    
-    console.log(`Big Ten parser for ${teamName} found ${games.length} games`);
-    
+
     return {
       teamName,
       season,
@@ -801,22 +1324,96 @@ export class HockeyScheduleScraper {
   }
 
   private isConferenceGame(teamName: string, opponent: string): boolean {
-    // Basic conference detection - can be enhanced
-    const bigTenTeams = ['Michigan', 'Michigan State', 'Ohio State', 'Penn State', 'Wisconsin', 'Minnesota', 'Notre Dame'];
-    const hockeyEastTeams = ['Boston University', 'Boston College', 'UMass', 'Northeastern', 'Providence', 'Maine', 'New Hampshire', 'UConn', 'Vermont', 'UMass Lowell', 'Merrimack'];
-    const nchcTeams = ['Denver', 'North Dakota', 'Minnesota Duluth', 'Colorado College', 'Western Michigan', 'Miami', 'Omaha', 'St. Cloud State'];
-    
-    if (bigTenTeams.includes(teamName)) {
-      return bigTenTeams.some(team => opponent.includes(team) && team !== teamName);
+    // Comprehensive conference mappings for NCAA Division I men's hockey
+    const conferences = {
+      'Big Ten': [
+        'Michigan', 'Michigan State', 'Ohio State', 'Penn State', 
+        'Wisconsin', 'Minnesota', 'Notre Dame'
+      ],
+      'Hockey East': [
+        'Boston University', 'Boston College', 'UMass', 'Northeastern', 
+        'Providence', 'Maine', 'New Hampshire', 'UConn', 'Vermont', 
+        'UMass Lowell', 'Merrimack'
+      ],
+      'NCHC': [
+        'Denver', 'North Dakota', 'Minnesota Duluth', 'Colorado College', 
+        'Western Michigan', 'Miami', 'Miami (OH)', 'Omaha', 'St. Cloud State',
+        'Arizona State'
+      ],
+      'ECAC Hockey': [
+        'Cornell', 'Clarkson', 'Dartmouth', 'Union (NY)', 'Harvard', 
+        'Princeton', 'Brown', 'St. Lawrence', 'Yale', 'Colgate', 
+        'Quinnipiac', 'Rensselaer'
+      ],
+      'CCHA': [
+        'Ferris State', 'Bowling Green', 'Michigan Tech', 'Bemidji State', 
+        'Lake Superior State', 'Northern Michigan', 'Minnesota State', 
+        'St. Thomas', 'Augustana'
+      ],
+      'Atlantic Hockey': [
+        'Bentley', 'Holy Cross', 'Sacred Heart', 'Niagara', 
+        'Canisius', 'Robert Morris', 'Rochester Institute of Technology', 
+        'Mercyhurst', 'Army', 'Air Force'
+      ],
+      'Independent': [
+        'Alaska Fairbanks', 'Alaska Anchorage', 'Lindenwood', 'LIU', 'Stonehill'
+      ]
+    };
+
+    // Find which conference the team belongs to
+    let teamConference = null;
+    for (const [conference, teams] of Object.entries(conferences)) {
+      if (teams.includes(teamName)) {
+        teamConference = conference;
+        break;
+      }
     }
-    if (hockeyEastTeams.includes(teamName)) {
-      return hockeyEastTeams.some(team => opponent.includes(team) && team !== teamName);
+
+    // If team not found in any conference, return false
+    if (!teamConference || teamConference === 'Independent') {
+      return false;
     }
-    if (nchcTeams.includes(teamName)) {
-      return nchcTeams.some(team => opponent.includes(team) && team !== teamName);
-    }
-    
-    return false;
+
+    // Check if opponent is in the same conference
+    const conferenceTeams = conferences[teamConference as keyof typeof conferences];
+    return conferenceTeams.some(team => {
+      // Handle various opponent name formats
+      const normalizedOpponent = opponent.toLowerCase().trim();
+      const normalizedTeam = team.toLowerCase();
+      
+      // Direct match
+      if (normalizedOpponent === normalizedTeam) {
+        return team !== teamName; // Don't match against self
+      }
+      
+      // Partial match for cases like "UMass" vs "Massachusetts"
+      if (normalizedOpponent.includes(normalizedTeam) || normalizedTeam.includes(normalizedOpponent)) {
+        return team !== teamName;
+      }
+      
+      // Handle specific naming variations
+      const variations: { [key: string]: string[] } = {
+        'umass': ['massachusetts'],
+        'uconn': ['connecticut'],
+        'unh': ['new hampshire'],
+        'rit': ['rochester institute of technology', 'rochester tech'],
+        'miami': ['miami (oh)', 'miami ohio'],
+        'union': ['union (ny)', 'union college'],
+        'st.': ['saint'],
+        'saint': ['st.']
+      };
+      
+      for (const [key, alts] of Object.entries(variations)) {
+        if (normalizedTeam.includes(key) && alts.some(alt => normalizedOpponent.includes(alt))) {
+          return team !== teamName;
+        }
+        if (normalizedOpponent.includes(key) && alts.some(alt => normalizedTeam.includes(alt))) {
+          return team !== teamName;
+        }
+      }
+      
+      return false;
+    });
   }
 
   private removeDuplicateGames(games: ScheduleGame[]): ScheduleGame[] {
@@ -836,7 +1433,7 @@ export class HockeyScheduleScraper {
     return uniqueGames;
   }
 
-  private parseGameFromMatch(match: RegExpMatchArray, index: number): ScheduleGame | null {
+  private parseGameFromMatch(match: RegExpMatchArray, index: number, teamName?: string): ScheduleGame | null {
     try {
       const datePart = match[1]; // "Oct 4 (Sat)"
       const homeAway = match[2]; // "vs" or "at"
@@ -856,7 +1453,11 @@ export class HockeyScheduleScraper {
       
       // Remove common suffixes that get captured
       opponent = opponent.replace(/\s+(Box\s+Score|Recap|Gallery|Int|Gameday\s+Information|Watch|Live|Stats|Tickets|Magnet\s+Giveaway|Schedule\s+Magnet\s+Giveaway|Exhibition).*$/i, '');
-      opponent = opponent.replace(/\s+(Boston|Storrs|Orono|Cambridge|Durham|Providence|Amherst|North Andover|Hamden|Chestnut Hill|New York).*$/, '');
+      opponent = opponent.replace(/\s+(Boston|Storrs|Orono|Cambridge|Durham|Providence|Amherst|North Andover|Hamden|Chestnut Hill|New York|Worcester|Fairfield|USAF Academy|West Point|Erie|Rochester|Minneapolis|Fairbanks|Houghton|Marquette|Mankato|Big Rapids|Potsdam|Canton|Bemidji|St\.\s+Paul|Sault Ste\.\s+Marie).*$/, '');
+      
+      // Remove Michigan Tech specific patterns
+      opponent = opponent.replace(/\s+History(\s+.*)?$/, ''); // Remove "History" or "History vs [Team]" text
+      opponent = opponent.replace(/\s+Winter\s+Carnival(\s+.*)?$/, ''); // Remove "Winter Carnival" text
       
       // Remove content that suggests mixed/mangled parsing (signs of old content mixed in)
       opponent = opponent.replace(/\s+(Ice\s+Hockey\s+Highlights|All\s+Videos|Related\s+News|Skip\s+Ad|All\s+News|Highlights|Videos).*$/i, '');
@@ -885,7 +1486,18 @@ export class HockeyScheduleScraper {
           opponent.includes('Highlights') ||
           opponent.includes('Videos') ||
           opponent.includes('News') ||
-          opponent.length > 100) { // Suspiciously long names are likely mixed content
+          opponent.includes('@opponent') // Template variables
+          || opponent.includes('@date') 
+          || opponent.includes('@del') 
+          || opponent.includes('@') // Any @ symbol is suspicious
+          || opponent.includes('${') // Template literals
+          || opponent.includes('{{') // Template placeholders
+          || opponent.startsWith('on ') // Common parsing artifacts
+          || opponent.startsWith('at ') 
+          || opponent.includes('History') && opponent.includes(',') // Location/history mixed content
+          || /(.+)\s+\1/.test(opponent) // Repeated words (like "Niagara ... Niagara")
+          || opponent.split(' ').length > 8 // Too many words suggests mixed content
+          || opponent.length > 100) { // Suspiciously long names are likely mixed content
         return null;
       }
 
@@ -901,12 +1513,18 @@ export class HockeyScheduleScraper {
         broadcastInfo.network = 'ESPN+';
       }
 
-      // Check if conference game (look for common conference abbreviations)
-      const conference = match[0].includes('HEA') || // Hockey East
-                        match[0].includes('NCHC') || // NCHC
-                        match[0].includes('B1G') ||  // Big Ten
-                        match[0].includes('ECAC') || // ECAC
-                        match[0].includes('CCHA');  // CCHA
+      // Check if conference game - use enhanced detection if team name provided, otherwise fall back to abbreviations
+      let conference = false;
+      if (teamName && opponent) {
+        conference = this.isConferenceGame(teamName, opponent);
+      } else {
+        // Fallback to pattern-based detection when team name not available
+        conference = match[0].includes('HEA') || // Hockey East
+                    match[0].includes('NCHC') || // NCHC
+                    match[0].includes('B1G') ||  // Big Ten
+                    match[0].includes('ECAC') || // ECAC
+                    match[0].includes('CCHA');  // CCHA
+      }
 
       // Set venue info based on team
       let venue, city, state;
@@ -930,8 +1548,7 @@ export class HockeyScheduleScraper {
         status: 'scheduled',
         broadcastInfo,
       };
-    } catch (error) {
-      console.error('Error parsing game match:', error);
+    } catch {
       return null;
     }
   }
@@ -997,8 +1614,7 @@ export class HockeyScheduleScraper {
         status: 'scheduled',
         broadcastInfo,
       };
-    } catch (error) {
-      console.error('Error parsing game match:', error);
+    } catch {
       return null;
     }
   }
@@ -1068,8 +1684,7 @@ export class HockeyScheduleScraper {
         status: 'scheduled',
         broadcastInfo,
       };
-    } catch (error) {
-      console.error('Error parsing simple game match:', error);
+    } catch {
       return null;
     }
   }
@@ -1159,14 +1774,12 @@ export class HockeyScheduleScraper {
     
     // Prefer target season if found
     if (validSeasons.includes(targetSeason)) {
-      console.log(`Found target season ${targetSeason}`);
       return targetSeason;
     }
     
     // If we found valid seasons but not our target, pick the earliest valid one
     if (validSeasons.length > 0) {
       validSeasons.sort();
-      console.log(`Found valid season ${validSeasons[0]} (not target ${targetSeason})`);
       return validSeasons[0];
     }
     
@@ -1179,11 +1792,9 @@ export class HockeyScheduleScraper {
       });
       
       if (oldSeasons.length > 0) {
-        console.warn(`Found old seasons: ${oldSeasons.join(', ')} - website likely shows outdated ${oldSeasons[0]} schedule instead of ${targetSeason}`);
         return null; // Signal that this is likely old data
       }
       
-      console.warn(`Found seasons but none are valid: ${foundSeasons.join(', ')} - may be outdated data`);
       return null; // Signal that this is likely old data
     }
     
@@ -1191,11 +1802,9 @@ export class HockeyScheduleScraper {
     // Only default to target season if we have some evidence this is a current page
     const hasCurrentYearContent = textContent.includes('2025') || textContent.includes('2026');
     if (hasCurrentYearContent) {
-      console.log('No explicit season found but page contains current year references, defaulting to target season');
       return targetSeason;
     }
     
-    console.log('No season information found and no current year references, returning null');
     return null;
   }
 
@@ -1335,10 +1944,8 @@ export async function loadTeamScheduleUrls(): Promise<Record<string, string>> {
     });
     
     TEAM_SCHEDULE_URLS = urls;
-    console.log(`Loaded ${Object.keys(urls).length} team schedule URLs from mapping file`);
     return urls;
-  } catch (error) {
-    console.error('Failed to load team schedule URLs:', error);
+  } catch {
     return {};
   }
 }

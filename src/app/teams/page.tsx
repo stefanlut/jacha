@@ -44,7 +44,6 @@ function TeamScheduleScraper({ team }: { team: Team }) {
         setSchedule(result);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while scraping');
-        console.error('Scraping error:', err);
       } finally {
         setLoading(false);
       }
@@ -125,7 +124,8 @@ function TeamScheduleScraper({ team }: { team: Team }) {
                       {schedule.games.length} Games Found
                     </div>
                     <div className="text-xs text-gray-500">
-                      Verification Count
+                      {schedule.games.filter(g => g.conference).length} Conference • {' '}
+                      {schedule.games.filter(g => !g.conference).length} Non-Conference
                     </div>
                   </div>
                 </div>
@@ -360,8 +360,8 @@ export default function TeamsPage() {
         })).sort((a, b) => a.name.localeCompare(b.name));
         
         setTeams(teamsWithConferences);
-      } catch (error) {
-        console.error('Error loading teams:', error);
+      } catch {
+        // Handle error silently
       } finally {
         setLoading(false);
       }
@@ -430,7 +430,7 @@ export default function TeamsPage() {
                 placeholder="Search teams or conferences..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
               />
             </div>
 
