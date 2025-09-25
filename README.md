@@ -1,78 +1,77 @@
 # JACHA (Just Another College Hockey App)
 
-A modern, clean interface for viewing NCAA Division I Hockey Rankings for both Men's and Women's programs. Built with Next.js and Tailwind CSS.
+A modern, clean interface for viewing NCAA Division I Hockey Rankings and Team Schedules. Built with Next.js and Tailwind CSS.
 
 ## Features
 
-- 📊 Real-time Division I Hockey Rankings from USCHO.com:
-  - Men's Division I Rankings
+### 📊 Hockey Rankings
+- Real-time Division I Hockey Rankings from USCHO.com:
+  - Men's Division I Rankings  
   - Women's Division I Rankings
-- 🔄 Easy switching between Men's and Women's polls
-- 🎨 Clean, modern dark mode interface
-- 📱 Responsive design that works on desktop and mobile
-- 📈 Live updates showing:
-  - Current rankings
-  - Teams receiving votes outside the top rankings
-  - Last poll update date
+- Easy switching between Men's and Women's polls
+- Teams receiving votes outside the top rankings
+- Last poll update date
+
+### � Team Schedules  
+- Complete schedules for all 63 D1 hockey teams
+- Data sourced from College Hockey News
+- Search and filter teams by conference
+- Monthly schedule organization
+- Home/away and conference game indicators
+- Real-time schedule updates
+
+### �🎨 User Experience
+- Clean, modern dark mode interface
+- Responsive design that works on desktop and mobile
+- Fast loading with intelligent caching
+- Error boundaries for graceful error handling
 
 ## Tech Stack
 
-- **Framework**: [Next.js 15](https://nextjs.org/)
+- **Framework**: [Next.js 15](https://nextjs.org/) with React 19
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Data Source**: [USCHO.com](https://www.uscho.com/)
+- **Data Sources**: 
+  - [USCHO.com](https://www.uscho.com/) (Rankings)
+  - [College Hockey News](https://www.collegehockeynews.com/) (Team Schedules)
 - **Data Parsing**: Cheerio
 - **HTTP Client**: Axios
+- **TypeScript**: Full type safety
+
+## API Endpoints
+
+The application provides a clean, easy-to-use REST API:
+
+### Teams List
+```bash
+GET /api/teams/list
+```
+Returns all 63 D1 hockey teams organized by conference.
+
+### Team Schedule  
+```bash
+GET /api/schedule?team=Boston University
+```
+Returns complete season schedule for any D1 hockey team.
 
 ## Deployment
 
 This application uses Next.js API routes and requires a server runtime. The recommended deployment method is Vercel:
 
 1. Fork this repository to your GitHub account
-2. Sign up for [Vercel](https://vercel.com) (free for hobby projects)
+2. Sign up for [Vercel](https://vercel.com) (free for hobby projects)  
 3. Create a new project in Vercel and connect it to your forked repository
-4. Add your `SPORTRADAR_API_KEY` in Vercel:
-   - Go to Project Settings > Environment Variables
-   - Add `SPORTRADAR_API_KEY` with your API key
-   - Vercel will automatically encrypt and secure your API key
+4. Deploy automatically - no API keys required!
 
 Vercel will automatically:
+
 - Deploy your application
-- Handle API routes correctly
-- Manage environment variables securely
+- Handle API routes correctly  
 - Provide automatic HTTPS
 - Enable automatic deployments on git push
 
 ### Alternative Deployment Options
 
-If you prefer not to use Vercel, you can:
-1. Use another hosting platform that supports Next.js API routes (Netlify, AWS, etc.)
-2. Split the application into:
-   - Frontend (static site on GitHub Pages)
-   - Backend (serverless functions for API calls)
-
-Note: GitHub Pages alone won't work because it doesn't support server-side functionality needed for the API routes.
-
-## Environment Variables
-
-This application requires the following environment variables to be set:
-
-```bash
-SPORTRADAR_API_KEY=your_api_key_here  # Required for fetching team data
-```
-
-You can get your API key by:
-1. Creating an account at [SportRadar Developer Portal](https://developer.sportradar.com/)
-2. Subscribing to the NCAA Men's Hockey API
-3. Copying your API key from your dashboard
-
-For local development:
-1. Copy `.env.example` to `.env.local`
-2. Replace `your_api_key_here` with your actual API key
-
-For production deployment:
-1. Add the `SPORTRADAR_API_KEY` environment variable to your hosting platform
-   - For Vercel: Add in Project Settings > Environment Variables
-   - For other platforms: Consult their documentation for adding environment variables
+You can also deploy to any platform that supports Next.js API routes (Netlify, Railway, AWS, etc.).
 
 ## Local Development
 
@@ -88,30 +87,37 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 
-```
+```text
 src/
   app/
     components/
-      PollSelector.tsx  # Poll switching component
-    types.ts           # TypeScript interfaces
-    page.tsx          # Main rankings page
-    layout.tsx        # App layout
-    globals.css       # Global styles
+      PollSelector.tsx           # Poll switching component
+      TeamScheduleSelector.tsx   # Team selection with search/filter
+      TeamScheduleDisplay.tsx    # Schedule display component
+      Header.tsx                 # Navigation header
+    utils/
+      chnScheduleScraper.ts     # College Hockey News scraper
+      cache.ts                  # API response caching
+    api/
+      teams/list/               # Teams list endpoint
+      schedule/                 # Team schedule endpoint
+    types.ts                    # TypeScript interfaces
+    page.tsx                    # Main rankings page
+    teams/page.tsx              # Team schedules page
+    layout.tsx                  # App layout
+    globals.css                 # Global styles
 ```
 
-## Data Refresh
+## Data Sources & Refresh
 
-The rankings are fetched from USCHO.com's JSON endpoints and automatically updated when you load the page or switch between polls. Available data includes:
+### Rankings
+- Source: USCHO.com JSON endpoints
+- Updates: Real-time when page loads or polls switch
+- Available: Men's top 20, Women's top 15, plus receiving votes
 
-### Men's Division I
-- Current top 20 rankings
-- Teams receiving votes but not in the top rankings
-- Last poll update date
-
-### Women's Division I
-- Current top 15 rankings
-- Teams receiving votes but not in the top rankings
-- Last poll update date
-
-Rankings are fetched in real-time and include the latest updates from USCHO.com.
+### Team Schedules
+- Source: College Hockey News schedule pages
+- Updates: Cached for 10 minutes for performance
+- Coverage: All 63 D1 hockey teams with complete season schedules
+- Features: Home/away indicators, conference games, monthly organization
 
