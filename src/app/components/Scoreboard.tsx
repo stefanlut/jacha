@@ -125,17 +125,17 @@ export default function Scoreboard({ initialDate }: ScoreboardProps) {
   }
 
   return (
-    <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
+    <div className="bg-white/10 rounded-lg p-4 sm:p-6 backdrop-blur-sm">
       {/* Header with controls */}
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-white">Live Scoreboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Live Scoreboard</h1>
           
           {/* Gender Toggle */}
           <div className="flex bg-white/10 rounded-lg p-1">
             <button
               onClick={() => setSelectedGender('men')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 selectedGender === 'men'
                   ? 'bg-white/20 text-white'
                   : 'text-slate-300 hover:text-white'
@@ -145,7 +145,7 @@ export default function Scoreboard({ initialDate }: ScoreboardProps) {
             </button>
             <button
               onClick={() => setSelectedGender('women')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 selectedGender === 'women'
                   ? 'bg-white/20 text-white'
                   : 'text-slate-300 hover:text-white'
@@ -157,32 +157,33 @@ export default function Scoreboard({ initialDate }: ScoreboardProps) {
         </div>
 
         {/* Date Navigation */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={goToPreviousDay}
-            className="px-3 py-2 bg-white/10 text-white rounded hover:bg-white/20 transition-colors"
-          >
-            ← Previous
-          </button>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-3">
+            <button
+              onClick={goToPreviousDay}
+              className="px-2 sm:px-3 py-2 bg-white/10 text-white rounded hover:bg-white/20 transition-colors text-sm sm:text-base"
+            >
+              ← Prev
+            </button>
+            <button
+              onClick={goToNextDay}
+              className="px-2 sm:px-3 py-2 bg-white/10 text-white rounded hover:bg-white/20 transition-colors text-sm sm:text-base"
+            >
+              Next →
+            </button>
+          </div>
           
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-white">
+          <div className="text-center sm:text-center flex-1 sm:flex-initial">
+            <h2 className="text-base sm:text-lg font-semibold text-white">
               {formatDate(selectedDate)}
             </h2>
             <button
               onClick={goToToday}
-              className="text-sm text-slate-300 hover:text-white transition-colors"
+              className="text-xs sm:text-sm text-slate-300 hover:text-white transition-colors"
             >
               Go to Today
             </button>
           </div>
-          
-          <button
-            onClick={goToNextDay}
-            className="px-3 py-2 bg-white/10 text-white rounded hover:bg-white/20 transition-colors"
-          >
-            Next →
-          </button>
         </div>
 
         <div className="text-xs text-slate-400">
@@ -200,32 +201,37 @@ export default function Scoreboard({ initialDate }: ScoreboardProps) {
           scoreboard?.games.map((game) => (
             <div
               key={game.id}
-              className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+              className="p-3 sm:p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
             >
-              <div className="flex items-center space-x-4 flex-1">
-                <div className="text-white font-medium min-w-0">
-                  <div className="flex items-center space-x-2">
-                    <span className="truncate">{game.awayTeam}</span>
-                    <span className="text-slate-400">@</span>
-                    <span className="truncate">{game.homeTeam}</span>
+              {/* Mobile: Stack vertically, Desktop: Side by side */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                {/* Team matchup */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-white font-medium">
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <span className="truncate text-sm sm:text-base">{game.awayTeam}</span>
+                      <span className="text-slate-400 text-sm">@</span>
+                      <span className="truncate text-sm sm:text-base">{game.homeTeam}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2 mt-1">
+                  <div className="flex items-center flex-wrap gap-2 mt-1">
                     {game.exhibition && (
                       <span className="text-xs bg-yellow-600/30 text-yellow-300 px-2 py-1 rounded">
                         EX
                       </span>
                     )}
-                    <span className="text-xs text-slate-400">{game.conference}</span>
+                    <span className="text-xs text-slate-400 truncate">{game.conference}</span>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <div className={`text-sm font-bold px-3 py-2 rounded ${getGameStatusClass(game)}`}>
-                  {game.status === 'completed' ? 'Final' : 'Scheduled'}
-                </div>
-                <div className="text-white font-mono text-lg min-w-[60px] text-right">
-                  {formatGameResult(game)}
+                
+                {/* Score and status */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0">
+                  <div className={`text-xs sm:text-sm font-bold px-2 sm:px-3 py-1 sm:py-2 rounded whitespace-nowrap ${getGameStatusClass(game)}`}>
+                    {game.status === 'completed' ? 'Final' : 'Scheduled'}
+                  </div>
+                  <div className="text-white font-mono text-base sm:text-lg min-w-[50px] sm:min-w-[60px] text-right">
+                    {formatGameResult(game)}
+                  </div>
                 </div>
               </div>
             </div>
