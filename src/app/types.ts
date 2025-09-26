@@ -60,4 +60,12 @@ export interface CHNTeamsList {
   conferences: string[];
   teamsByConference: Record<string, string[]>;
   allTeams: string[];
+  gender: 'men' | 'women';
+}
+
+export interface CHNTeamInfo {
+  name: string;
+  url: string;
+  conference: string;
+  gender: 'men' | 'women';
 }

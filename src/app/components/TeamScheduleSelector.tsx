@@ -6,9 +6,11 @@ import { CHNTeamsList } from '@/app/types';
 interface TeamScheduleSelectorProps {
   selectedTeam: string | null;
   onTeamChange: (teamName: string) => void;
+  selectedGender: 'men' | 'women';
+  onGenderChange: (gender: 'men' | 'women') => void;
 }
 
-export default function TeamScheduleSelector({ selectedTeam, onTeamChange }: TeamScheduleSelectorProps) {
+export default function TeamScheduleSelector({ selectedTeam, onTeamChange, selectedGender, onGenderChange }: TeamScheduleSelectorProps) {
   const [teamsList, setTeamsList] = useState<CHNTeamsList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,13 +19,18 @@ export default function TeamScheduleSelector({ selectedTeam, onTeamChange }: Tea
 
   useEffect(() => {
     const fetchTeams = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('/api/teams/list');
+        const response = await fetch(`/api/teams/list?gender=${selectedGender}`);
         if (!response.ok) {
           throw new Error('Failed to fetch teams');
         }
         const data = await response.json();
         setTeamsList(data);
+        // Reset selections when switching gender
+        setSelectedConference('All');
+        setSearchTerm('');
+        onTeamChange(''); // Clear selected team
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch teams');
       } finally {
@@ -32,7 +39,7 @@ export default function TeamScheduleSelector({ selectedTeam, onTeamChange }: Tea
     };
 
     fetchTeams();
-  }, []);
+  }, [selectedGender, onTeamChange]);
 
   if (loading) {
     return (
@@ -82,6 +89,32 @@ export default function TeamScheduleSelector({ selectedTeam, onTeamChange }: Tea
   return (
     <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
       <h2 className="text-xl font-bold text-white mb-4">Select Team</h2>
+      
+      {/* Gender Toggle */}
+      <div className="mb-6">
+        <div className="flex bg-white/10 rounded-lg p-1">
+          <button
+            onClick={() => onGenderChange('men')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              selectedGender === 'men'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Men&apos;s Hockey
+          </button>
+          <button
+            onClick={() => onGenderChange('women')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              selectedGender === 'women'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Women&apos;s Hockey
+          </button>
+        </div>
+      </div>
       
       {/* Search and Filter Controls */}
       <div className="space-y-4 mb-6">

@@ -29,8 +29,8 @@ export interface CHNTeamSchedule {
   lastUpdated: Date;
 }
 
-// Team name to CHN URL mapping (verified IDs)
-const CHN_TEAM_MAPPING = new Map<string, { url: string; conference: string }>([
+// Men's team name to CHN URL mapping (verified IDs)
+const CHN_MEN_TEAM_MAPPING = new Map<string, { url: string; conference: string }>([
   // Atlantic Hockey
   ['Air Force', { url: 'https://www.collegehockeynews.com/schedules/team/Air-Force/1', conference: 'Atlantic Hockey' }],
   ['Army', { url: 'https://www.collegehockeynews.com/schedules/team/Army/6', conference: 'Atlantic Hockey' }],
@@ -120,27 +120,91 @@ const CHN_TEAM_MAPPING = new Map<string, { url: string; conference: string }>([
   ['Stonehill', { url: 'https://www.collegehockeynews.com/schedules/team/Stonehill/422', conference: 'Independent' }],
 ]);
 
+// Women's team name to CHN URL mapping (verified IDs)
+const CHN_WOMEN_TEAM_MAPPING = new Map<string, { url: string; conference: string }>([
+  // ECAC
+  ['Brown', { url: 'https://www.collegehockeynews.com/women/schedules/team/Brown/12', conference: 'ECAC' }],
+  ['Clarkson', { url: 'https://www.collegehockeynews.com/women/schedules/team/Clarkson/14', conference: 'ECAC' }],
+  ['Colgate', { url: 'https://www.collegehockeynews.com/women/schedules/team/Colgate/15', conference: 'ECAC' }],
+  ['Cornell', { url: 'https://www.collegehockeynews.com/women/schedules/team/Cornell/18', conference: 'ECAC' }],
+  ['Dartmouth', { url: 'https://www.collegehockeynews.com/women/schedules/team/Dartmouth/19', conference: 'ECAC' }],
+  ['Harvard', { url: 'https://www.collegehockeynews.com/women/schedules/team/Harvard/22', conference: 'ECAC' }],
+  ['Princeton', { url: 'https://www.collegehockeynews.com/women/schedules/team/Princeton/45', conference: 'ECAC' }],
+  ['Quinnipiac', { url: 'https://www.collegehockeynews.com/women/schedules/team/Quinnipiac/47', conference: 'ECAC' }],
+  ['Rensselaer', { url: 'https://www.collegehockeynews.com/women/schedules/team/Rensselaer/48', conference: 'ECAC' }],
+  ['St. Lawrence', { url: 'https://www.collegehockeynews.com/women/schedules/team/St-Lawrence/53', conference: 'ECAC' }],
+  ['Union', { url: 'https://www.collegehockeynews.com/women/schedules/team/Union/54', conference: 'ECAC' }],
+  ['Union (NY)', { url: 'https://www.collegehockeynews.com/women/schedules/team/Union/54', conference: 'ECAC' }],
+  ['Yale', { url: 'https://www.collegehockeynews.com/women/schedules/team/Yale/59', conference: 'ECAC' }],
+
+  // Hockey East
+  ['Boston College', { url: 'https://www.collegehockeynews.com/women/schedules/team/Boston-College/9', conference: 'Hockey East' }],
+  ['Boston University', { url: 'https://www.collegehockeynews.com/women/schedules/team/Boston-University/10', conference: 'Hockey East' }],
+  ['Connecticut', { url: 'https://www.collegehockeynews.com/women/schedules/team/Connecticut/17', conference: 'Hockey East' }],
+  ['UConn', { url: 'https://www.collegehockeynews.com/women/schedules/team/Connecticut/17', conference: 'Hockey East' }],
+  ['Maine', { url: 'https://www.collegehockeynews.com/women/schedules/team/Maine/25', conference: 'Hockey East' }],
+  ['Holy Cross', { url: 'https://www.collegehockeynews.com/women/schedules/team/Holy-Cross/23', conference: 'Hockey East' }],
+  ['Merrimack', { url: 'https://www.collegehockeynews.com/women/schedules/team/Merrimack/29', conference: 'Hockey East' }],
+  ['New Hampshire', { url: 'https://www.collegehockeynews.com/women/schedules/team/New-Hampshire/38', conference: 'Hockey East' }],
+  ['Northeastern', { url: 'https://www.collegehockeynews.com/women/schedules/team/Northeastern/41', conference: 'Hockey East' }],
+  ['Providence', { url: 'https://www.collegehockeynews.com/women/schedules/team/Providence/46', conference: 'Hockey East' }],
+  ['Vermont', { url: 'https://www.collegehockeynews.com/women/schedules/team/Vermont/55', conference: 'Hockey East' }],
+
+  // WCHA
+  ['Bemidji State', { url: 'https://www.collegehockeynews.com/women/schedules/team/Bemidji-State/7', conference: 'WCHA' }],
+  ['Minnesota', { url: 'https://www.collegehockeynews.com/women/schedules/team/Minnesota/34', conference: 'WCHA' }],
+  ['Minnesota State', { url: 'https://www.collegehockeynews.com/women/schedules/team/Minnesota-State/35', conference: 'WCHA' }],
+  ['Ohio State', { url: 'https://www.collegehockeynews.com/women/schedules/team/Ohio-State/44', conference: 'WCHA' }],
+  ['St. Cloud State', { url: 'https://www.collegehockeynews.com/women/schedules/team/St-Cloud-State/52', conference: 'WCHA' }],
+  ['St. Thomas', { url: 'https://www.collegehockeynews.com/women/schedules/team/St-Thomas/63', conference: 'WCHA' }],
+  ['Wisconsin', { url: 'https://www.collegehockeynews.com/women/schedules/team/Wisconsin/58', conference: 'WCHA' }],
+
+  // AHA (Atlantic Hockey America - Women's)
+  ['Delaware', { url: 'https://www.collegehockeynews.com/women/schedules/team/Delaware/447', conference: 'AHA' }],
+  ['Lindenwood', { url: 'https://www.collegehockeynews.com/women/schedules/team/Lindenwood/433', conference: 'AHA' }],
+  ['Mercyhurst', { url: 'https://www.collegehockeynews.com/women/schedules/team/Mercyhurst/28', conference: 'AHA' }],
+  ['Penn State', { url: 'https://www.collegehockeynews.com/women/schedules/team/Penn-State/60', conference: 'AHA' }],
+  ['RIT', { url: 'https://www.collegehockeynews.com/women/schedules/team/RIT/49', conference: 'AHA' }],
+  ['Rochester Institute of Technology', { url: 'https://www.collegehockeynews.com/women/schedules/team/RIT/49', conference: 'AHA' }],
+  ['Robert Morris', { url: 'https://www.collegehockeynews.com/women/schedules/team/Robert-Morris/50', conference: 'AHA' }],
+  ['Syracuse', { url: 'https://www.collegehockeynews.com/women/schedules/team/Syracuse/423', conference: 'AHA' }],
+
+  // NEWHA (New England Women's Hockey Alliance)
+  ['Assumption', { url: 'https://www.collegehockeynews.com/women/schedules/team/Assumption/401', conference: 'NEWHA' }],
+  ['Franklin Pierce', { url: 'https://www.collegehockeynews.com/women/schedules/team/Franklin-Pierce/406', conference: 'NEWHA' }],
+  ['Long Island', { url: 'https://www.collegehockeynews.com/women/schedules/team/Long-Island/62', conference: 'NEWHA' }],
+  ['LIU', { url: 'https://www.collegehockeynews.com/women/schedules/team/Long-Island/62', conference: 'NEWHA' }],
+  ['Post', { url: 'https://www.collegehockeynews.com/women/schedules/team/Post/434', conference: 'NEWHA' }],
+  ['Sacred Heart', { url: 'https://www.collegehockeynews.com/women/schedules/team/Sacred-Heart/51', conference: 'NEWHA' }],
+  ['Saint Anselm', { url: 'https://www.collegehockeynews.com/women/schedules/team/Saint-Anselm/419', conference: 'NEWHA' }],
+  ['Saint Michael\'s', { url: 'https://www.collegehockeynews.com/women/schedules/team/Saint-Michaels/421', conference: 'NEWHA' }],
+  ['Stonehill', { url: 'https://www.collegehockeynews.com/women/schedules/team/Stonehill/422', conference: 'NEWHA' }],
+]);
+
 export class CollegeHockeyNewsScraper {
   private static readonly USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
   
   /**
-   * Get team mapping info by name
+   * Get team mapping info by name and gender
    */
-  static getTeamInfo(teamName: string): { url: string; conference: string } | null {
-    return CHN_TEAM_MAPPING.get(teamName) || null;
+  static getTeamInfo(teamName: string, gender: 'men' | 'women' = 'men'): { url: string; conference: string; gender: 'men' | 'women' } | null {
+    const mapping = gender === 'women' ? CHN_WOMEN_TEAM_MAPPING : CHN_MEN_TEAM_MAPPING;
+    const info = mapping.get(teamName);
+    return info ? { ...info, gender } : null;
   }
 
   /**
    * Get all available teams (unique teams only, no aliases)
    */
-  static getAllTeams(): { name: string; conference: string }[] {
-    const uniqueTeams = new Map<string, { name: string; conference: string }>();
+  static getAllTeams(gender: 'men' | 'women' = 'men'): { name: string; conference: string; gender: 'men' | 'women' }[] {
+    const mapping = gender === 'women' ? CHN_WOMEN_TEAM_MAPPING : CHN_MEN_TEAM_MAPPING;
+    const uniqueTeams = new Map<string, { name: string; conference: string; gender: 'men' | 'women' }>();
     
     // Iterate through all teams and keep only one entry per unique URL
-    for (const [name, info] of CHN_TEAM_MAPPING.entries()) {
+    for (const [name, info] of mapping.entries()) {
       const key = info.url;
       if (!uniqueTeams.has(key)) {
-        uniqueTeams.set(key, { name, conference: info.conference });
+        uniqueTeams.set(key, { name, conference: info.conference, gender });
       }
     }
     
@@ -150,10 +214,10 @@ export class CollegeHockeyNewsScraper {
   /**
    * Scrape team schedule from College Hockey News
    */
-  static async scrapeTeamSchedule(teamName: string): Promise<CHNTeamSchedule> {
-    const teamInfo = this.getTeamInfo(teamName);
+  static async scrapeTeamSchedule(teamName: string, gender: 'men' | 'women' = 'men'): Promise<CHNTeamSchedule> {
+    const teamInfo = this.getTeamInfo(teamName, gender);
     if (!teamInfo) {
-      throw new Error(`Team "${teamName}" not found in CHN mapping`);
+      throw new Error(`Team "${teamName}" not found in CHN ${gender}'s mapping`);
     }
 
     try {
@@ -202,10 +266,11 @@ export class CollegeHockeyNewsScraper {
 
         // Check if this is a month header row
         const monthHeader = $row.text().trim();
-        if (monthHeader.match(/^(January|February|March|April|October|November|December)\s+\d{4}$/)) {
-          const [month, year] = monthHeader.split(' ');
-          currentMonth = month;
-          currentYear = year;
+        const monthMatch = monthHeader.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/);
+        if (monthMatch) {
+          currentMonth = monthMatch[1];
+          currentYear = monthMatch[2];
+          console.log(`Found month header: ${currentMonth} ${currentYear}`);
           return;
         }
 
@@ -219,7 +284,49 @@ export class CollegeHockeyNewsScraper {
           if (!dayMatch) return;
 
           const day = parseInt(dayMatch[1]);
+          
+          // Validate that we have current month and year
+          if (!currentMonth || !currentYear) {
+            console.warn(`Missing month/year context for date parsing: month=${currentMonth}, year=${currentYear}`);
+            return;
+          }
+          
           const gameDate = new Date(`${currentMonth} ${day}, ${currentYear}`);
+          
+          // Validate the parsed date
+          if (isNaN(gameDate.getTime())) {
+            console.warn(`Invalid date parsed: ${currentMonth} ${day}, ${currentYear}`);
+            return;
+          }
+          
+          // Check if this is a completed game by looking for W/L in column 2
+          const resultCell = $(cells[2]).text().trim();
+          const teamScoreCell = $(cells[3]).text().trim();
+          const separatorCell = $(cells[4]).text().trim();
+          const opponentScoreCell = $(cells[5]).text().trim();
+          
+          let isCompleted = false;
+          let gameResult: { score: string; won: boolean } | undefined;
+          
+          // Parse completed game results
+          if ((resultCell === 'W' || resultCell === 'L') && teamScoreCell) {
+            // The separator and opponent score are combined in cell 4 like "- 7"
+            const separatorAndOpponentScore = separatorCell;
+            const opponentScoreMatch = separatorAndOpponentScore.match(/^-\s*(\d+)$/);
+            
+            if (opponentScoreMatch) {
+              isCompleted = true;
+              const teamScore = parseInt(teamScoreCell);
+              const opponentScore = parseInt(opponentScoreMatch[1]);
+              
+              if (!isNaN(teamScore) && !isNaN(opponentScore)) {
+                gameResult = {
+                  score: `${teamScore}-${opponentScore}`,
+                  won: resultCell === 'W'
+                };
+              }
+            }
+          }
           
           // Extract home/away info from the location column
           const locationCell = $(cells[6]).text().trim();
@@ -249,11 +356,11 @@ export class CollegeHockeyNewsScraper {
           // Skip if no opponent found
           if (!opponent) return;
 
-          // Extract time from the correct column (column 9)
-          const timeCell = $(cells[9]);
+          // Extract time from the correct column (column 10)
+          const timeCell = $(cells[10]);
           const time = timeCell.text().trim();
 
-          // Generate unique ID for the game
+          // Generate unique ID for the game (safe now that we validated the date)
           const gameId = `${teamDisplayName}-${gameDate.toISOString().split('T')[0]}-${opponent}`.replace(/\s+/g, '-');
 
           const game: CHNScheduleGame = {
@@ -264,7 +371,8 @@ export class CollegeHockeyNewsScraper {
             time: time || undefined,
             conference: isConference,
             exhibition: isExhibition,
-            status: 'scheduled', // CHN shows all future games as scheduled
+            status: isCompleted ? 'completed' : 'scheduled',
+            result: gameResult,
           };
 
           // Check for tournament information (footnote numbers)

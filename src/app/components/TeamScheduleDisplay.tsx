@@ -5,9 +5,10 @@ import { CHNTeamSchedule, CHNScheduleGame } from '@/app/types';
 
 interface TeamScheduleDisplayProps {
   teamName: string;
+  gender: 'men' | 'women';
 }
 
-export default function TeamScheduleDisplay({ teamName }: TeamScheduleDisplayProps) {
+export default function TeamScheduleDisplay({ teamName, gender }: TeamScheduleDisplayProps) {
   const [schedule, setSchedule] = useState<CHNTeamSchedule | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +21,7 @@ export default function TeamScheduleDisplay({ teamName }: TeamScheduleDisplayPro
       setError(null);
       
       try {
-        const response = await fetch(`/api/schedule?team=${encodeURIComponent(teamName)}`);
+        const response = await fetch(`/api/schedule?team=${encodeURIComponent(teamName)}&gender=${gender}`);
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -49,7 +50,7 @@ export default function TeamScheduleDisplay({ teamName }: TeamScheduleDisplayPro
     };
 
     fetchSchedule();
-  }, [teamName]);
+  }, [teamName, gender]);
 
   if (loading) {
     return (
@@ -167,8 +168,25 @@ export default function TeamScheduleDisplay({ teamName }: TeamScheduleDisplayPro
                       )}
                     </div>
                   </div>
-                  <div className="text-sm text-slate-300">
-                    {formatGameTime(game.time)}
+                  <div className="flex items-center space-x-3">
+                    {game.status === 'completed' && game.result ? (
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-sm font-bold px-2 py-1 rounded ${
+                          game.result.won 
+                            ? 'bg-green-600/30 text-green-300' 
+                            : 'bg-red-600/30 text-red-300'
+                        }`}>
+                          {game.result.won ? 'W' : 'L'}
+                        </span>
+                        <span className="text-sm font-mono text-white">
+                          {game.result.score}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-300">
+                        {formatGameTime(game.time)}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

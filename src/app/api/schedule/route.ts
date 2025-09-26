@@ -5,6 +5,7 @@ import { apiCache } from '@/app/utils/cache';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const teamName = searchParams.get('team');
+  const gender = (searchParams.get('gender') as 'men' | 'women') || 'men';
 
   if (!teamName) {
     return NextResponse.json(
@@ -13,8 +14,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Validate gender parameter
+  if (gender !== 'men' && gender !== 'women') {
+    return NextResponse.json(
+      { error: 'Gender must be either "men" or "women"' },
+      { status: 400 }
+    );
+  }
+
   // Check cache first (10 minute cache for schedules)
-  const cacheKey = `chn-schedule-${teamName.toLowerCase().replace(/\s+/g, '-')}`;
+  const cacheKey = `chn-schedule-${gender}-${teamName.toLowerCase().replace(/\s+/g, '-')}`;
   const cachedData = apiCache.get(cacheKey);
   if (cachedData) {
     return NextResponse.json(cachedData);
@@ -22,16 +31,16 @@ export async function GET(request: NextRequest) {
 
   try {
     // Check if team exists in our mapping
-    const teamInfo = CollegeHockeyNewsScraper.getTeamInfo(teamName);
+    const teamInfo = CollegeHockeyNewsScraper.getTeamInfo(teamName, gender);
     if (!teamInfo) {
       return NextResponse.json(
-        { error: `Team "${teamName}" not found. Available teams can be retrieved from /api/teams/list` },
+        { error: `Team "${teamName}" not found in ${gender}'s teams. Available teams can be retrieved from /api/teams/list?gender=${gender}` },
         { status: 404 }
       );
     }
 
     // Scrape the schedule
-    const schedule = await CollegeHockeyNewsScraper.scrapeTeamSchedule(teamName);
+    const schedule = await CollegeHockeyNewsScraper.scrapeTeamSchedule(teamName, gender);
     
     // Cache the result for 10 minutes
     apiCache.set(cacheKey, schedule, 10 * 60 * 1000);

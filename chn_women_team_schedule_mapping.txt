@@ -1,0 +1,56 @@
+# College Hockey News Women's Team Schedule URL Mapping
+# Format: Team Name, CHN Schedule URL, Conference
+
+# ECAC
+Brown, https://www.collegehockeynews.com/women/schedules/team/Brown/12, ECAC
+Clarkson, https://www.collegehockeynews.com/women/schedules/team/Clarkson/14, ECAC
+Colgate, https://www.collegehockeynews.com/women/schedules/team/Colgate/15, ECAC
+Cornell, https://www.collegehockeynews.com/women/schedules/team/Cornell/18, ECAC
+Dartmouth, https://www.collegehockeynews.com/women/schedules/team/Dartmouth/19, ECAC
+Harvard, https://www.collegehockeynews.com/women/schedules/team/Harvard/22, ECAC
+Princeton, https://www.collegehockeynews.com/women/schedules/team/Princeton/45, ECAC
+Quinnipiac, https://www.collegehockeynews.com/women/schedules/team/Quinnipiac/47, ECAC
+Rensselaer, https://www.collegehockeynews.com/women/schedules/team/Rensselaer/48, ECAC
+St. Lawrence, https://www.collegehockeynews.com/women/schedules/team/St-Lawrence/53, ECAC
+Union, https://www.collegehockeynews.com/women/schedules/team/Union/54, ECAC
+Yale, https://www.collegehockeynews.com/women/schedules/team/Yale/59, ECAC
+
+# Hockey East
+Boston College, https://www.collegehockeynews.com/women/schedules/team/Boston-College/9, Hockey East
+Boston University, https://www.collegehockeynews.com/women/schedules/team/Boston-University/10, Hockey East
+Connecticut, https://www.collegehockeynews.com/women/schedules/team/Connecticut/17, Hockey East
+Maine, https://www.collegehockeynews.com/women/schedules/team/Maine/25, Hockey East
+Holy Cross, https://www.collegehockeynews.com/women/schedules/team/Holy-Cross/23, Hockey East
+Merrimack, https://www.collegehockeynews.com/women/schedules/team/Merrimack/29, Hockey East
+New Hampshire, https://www.collegehockeynews.com/women/schedules/team/New-Hampshire/38, Hockey East
+Northeastern, https://www.collegehockeynews.com/women/schedules/team/Northeastern/41, Hockey East
+Providence, https://www.collegehockeynews.com/women/schedules/team/Providence/46, Hockey East
+Vermont, https://www.collegehockeynews.com/women/schedules/team/Vermont/55, Hockey East
+
+# WCHA
+Bemidji State, https://www.collegehockeynews.com/women/schedules/team/Bemidji-State/7, WCHA
+Minnesota, https://www.collegehockeynews.com/women/schedules/team/Minnesota/34, WCHA
+Minnesota State, https://www.collegehockeynews.com/women/schedules/team/Minnesota-State/35, WCHA
+Ohio State, https://www.collegehockeynews.com/women/schedules/team/Ohio-State/44, WCHA
+St. Cloud State, https://www.collegehockeynews.com/women/schedules/team/St-Cloud-State/52, WCHA
+St. Thomas, https://www.collegehockeynews.com/women/schedules/team/St-Thomas/63, WCHA
+Wisconsin, https://www.collegehockeynews.com/women/schedules/team/Wisconsin/58, WCHA
+
+# AHA
+Delaware, https://www.collegehockeynews.com/women/schedules/team/Delaware/447, AHA
+Lindenwood, https://www.collegehockeynews.com/women/schedules/team/Lindenwood/433, AHA
+Mercyhurst, https://www.collegehockeynews.com/women/schedules/team/Mercyhurst/28, AHA
+Penn State, https://www.collegehockeynews.com/women/schedules/team/Penn-State/60, AHA
+RIT, https://www.collegehockeynews.com/women/schedules/team/RIT/49, AHA
+Robert Morris, https://www.collegehockeynews.com/women/schedules/team/Robert-Morris/50, AHA
+Syracuse, https://www.collegehockeynews.com/women/schedules/team/Syracuse/423, AHA
+
+# NEWHA
+Assumption, https://www.collegehockeynews.com/women/schedules/team/Assumption/401, NEWHA
+Franklin Pierce, https://www.collegehockeynews.com/women/schedules/team/Franklin-Pierce/406, NEWHA
+Long Island, https://www.collegehockeynews.com/women/schedules/team/Long-Island/62, NEWHA
+Post, https://www.collegehockeynews.com/women/schedules/team/Post/434, NEWHA
+Sacred Heart, https://www.collegehockeynews.com/women/schedules/team/Sacred-Heart/51, NEWHA
+Saint Anselm, https://www.collegehockeynews.com/women/schedules/team/Saint-Anselm/419, NEWHA
+Saint Michael's, https://www.collegehockeynews.com/women/schedules/team/Saint-Michaels/421, NEWHA
+Stonehill, https://www.collegehockeynews.com/women/schedules/team/Stonehill/422, NEWHA

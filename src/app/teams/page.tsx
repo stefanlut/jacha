@@ -7,6 +7,7 @@ import TeamScheduleDisplay from '@/app/components/TeamScheduleDisplay';
 
 export default function SchedulesPage() {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<'men' | 'women'>('men');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
@@ -22,12 +23,14 @@ export default function SchedulesPage() {
             <TeamScheduleSelector 
               selectedTeam={selectedTeam}
               onTeamChange={setSelectedTeam}
+              selectedGender={selectedGender}
+              onGenderChange={setSelectedGender}
             />
           </div>
 
           <div>
             {selectedTeam ? (
-              <TeamScheduleDisplay teamName={selectedTeam} />
+              <TeamScheduleDisplay teamName={selectedTeam} gender={selectedGender} />
             ) : (
               <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
                 <div className="text-center text-slate-400 py-16">

@@ -2,16 +2,27 @@ import { NextResponse } from 'next/server';
 import { CollegeHockeyNewsScraper } from '@/app/utils/chnScheduleScraper';
 import { apiCache } from '@/app/utils/cache';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const gender = (searchParams.get('gender') as 'men' | 'women') || 'men';
+
+  // Validate gender parameter
+  if (gender !== 'men' && gender !== 'women') {
+    return NextResponse.json(
+      { error: 'Gender must be either "men" or "women"' },
+      { status: 400 }
+    );
+  }
+
   // Check cache first (longer cache since team list doesn't change often)
-  const cacheKey = 'chn-teams-list';
+  const cacheKey = `chn-teams-list-${gender}`;
   const cachedData = apiCache.get(cacheKey);
   if (cachedData) {
     return NextResponse.json(cachedData);
   }
 
   try {
-    const teams = CollegeHockeyNewsScraper.getAllTeams();
+    const teams = CollegeHockeyNewsScraper.getAllTeams(gender);
     
     // Group teams by conference for better organization
     const teamsByConference = teams.reduce((acc, team) => {
@@ -31,7 +42,8 @@ export async function GET() {
       totalTeams: teams.length,
       conferences: Object.keys(teamsByConference).sort(),
       teamsByConference,
-      allTeams: teams.map(t => t.name).sort()
+      allTeams: teams.map(t => t.name).sort(),
+      gender
     };
     
     // Cache for 1 hour since team list doesn't change frequently
