@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio';
-import type { AnyNode } from 'domhandler';
 import { CHNScoreboard, CHNScoreboardGame } from '@/app/types';
 
 export class CHNScoreboardScraper {
@@ -33,7 +32,9 @@ export class CHNScoreboardScraper {
       const $ = cheerio.load(html);
 
       // Build date sections: each header (single td) with subsequent rows
-  type Section = { header: string; rows: AnyNode[] };
+  // Using loose typing for Cheerio nodes to avoid cross-env type issues
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type Section = { header: string; rows: any[] };
       const sections: Section[] = [];
       let current: Section | null = null;
 
@@ -50,7 +51,7 @@ export class CHNScoreboardScraper {
         }
         if (current) {
           // Store the raw row node; we'll wrap with $ later
-          current.rows.push(row as unknown as AnyNode);
+          current.rows.push(row);
         }
       });
 
@@ -65,8 +66,8 @@ export class CHNScoreboardScraper {
       const games: CHNScoreboardGame[] = [];
       if (target) {
         for (const rawRow of target.rows) {
-          const $row = $(rawRow);
-          const cells = $row.find('td') as cheerio.Cheerio<AnyNode>;
+          const $row = $(rawRow as never);
+          const cells = $row.find('td');
           if (cells.length >= 8) {
             const game = this.parseGameRow($, cells, date);
             if (game) games.push(game);
@@ -81,7 +82,8 @@ export class CHNScoreboardScraper {
     }
   }
 
-  private static parseGameRow($: cheerio.CheerioAPI, cells: cheerio.Cheerio<AnyNode>, date: Date): CHNScoreboardGame | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static parseGameRow($: cheerio.CheerioAPI, cells: cheerio.Cheerio<any>, date: Date): CHNScoreboardGame | null {
     if (cells.length < 8) return null;
 
     try {
