@@ -303,7 +303,6 @@ export class CollegeHockeyNewsScraper {
           const resultCell = $(cells[2]).text().trim();
           const teamScoreCell = $(cells[3]).text().trim();
           const separatorCell = $(cells[4]).text().trim();
-          const opponentScoreCell = $(cells[5]).text().trim();
           
           let isCompleted = false;
           let gameResult: { score: string; won: boolean } | undefined;
