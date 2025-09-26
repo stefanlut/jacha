@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/app/components/Header';
 import TeamScheduleSelector from '@/app/components/TeamScheduleSelector';
 import TeamScheduleDisplay from '@/app/components/TeamScheduleDisplay';
 
@@ -11,7 +10,6 @@ export default function SchedulesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
-      <Header />
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2">Team Schedules</h1>

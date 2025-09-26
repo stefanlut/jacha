@@ -3,11 +3,9 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import Link from 'next/link';
 
 import PollSelector from './components/PollSelector';
 import { Poll } from './types';
-import { varsity } from './fonts';
 
 const defaultPoll: Poll = {
   id: 'd-i-mens-poll',
@@ -122,14 +120,9 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-8">
-          <h1 className={`text-5xl mb-2 ${varsity.className} tracking-wider`}>JACHA</h1>
+          <h1 className="text-2xl font-semibold mb-2">USCHO Division I Hockey Rankings</h1>
           <p className="text-slate-300">Just Another College Hockey App</p>
         </header>
-
-        <nav className="mb-8 flex gap-4">
-          <Link href="/" className="text-blue-600 hover:text-blue-800">Rankings</Link>
-          <Link href="/teams" className="text-blue-600 hover:text-blue-800">Team Schedules</Link>
-        </nav>
 
         <main>
           <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">

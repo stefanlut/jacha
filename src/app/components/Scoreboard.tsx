@@ -20,7 +20,11 @@ export default function Scoreboard({ initialDate }: ScoreboardProps) {
       setError(null);
       
       try {
-        const dateParam = selectedDate.toISOString().split('T')[0];
+        // Build YYYY-MM-DD from local date parts to avoid timezone shifting
+        const y = selectedDate.getFullYear();
+        const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const d = String(selectedDate.getDate()).padStart(2, '0');
+        const dateParam = `${y}-${m}-${d}`;
         const response = await fetch(`/api/scoreboard?date=${dateParam}&gender=${selectedGender}`);
         
         if (!response.ok) {

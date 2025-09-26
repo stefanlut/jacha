@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import type { AnyNode } from 'domhandler';
 import { CHNScoreboard, CHNScoreboardGame } from '@/app/types';
 
 export class CHNScoreboardScraper {
@@ -31,65 +32,56 @@ export class CHNScoreboardScraper {
       const html = await response.text();
       const $ = cheerio.load(html);
 
-      const games: CHNScoreboardGame[] = [];
+      // Build date sections: each header (single td) with subsequent rows
+  type Section = { header: string; rows: AnyNode[] };
+      const sections: Section[] = [];
+      let current: Section | null = null;
 
-      // Look for schedule data in table rows
-      let foundTargetDate = false;
-      
       $('tr').each((_, row) => {
         const $row = $(row);
         const cells = $row.find('td');
-        
-        // Check if this row contains a date header
         if (cells.length === 1) {
-          const dateText = cells.first().text().trim();
-          const targetDateStr = date.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            month: 'long', 
-            day: 'numeric', 
-            year: 'numeric' 
-          });
-          
-          if (dateText === targetDateStr) {
-            foundTargetDate = true;
-            console.log(`Found target date: ${targetDateStr}`);
-            return;
-          } else if (dateText.match(/^\w+, \w+ \d+, \d{4}$/)) {
-            // This is a different date, stop looking if we were in target date
-            if (foundTargetDate) {
-              foundTargetDate = false;
-            }
-            return;
+          const header = cells.first().text().replace(/\s+/g, ' ').trim();
+          if (/^\w+, \w+ \d+, \d{4}$/.test(header)) {
+            current = { header, rows: [] };
+            sections.push(current);
           }
+          return;
         }
-        
-        // If we found the target date and this is a game row, parse it
-        if (foundTargetDate && cells.length >= 8) {
-          try {
-            const gameData = this.parseGameRow($, cells, date);
-            if (gameData) {
-              games.push(gameData);
-            }
-          } catch (error) {
-            console.warn('Error parsing game row:', error);
-          }
+        if (current) {
+          // Store the raw row node; we'll wrap with $ later
+          current.rows.push(row as unknown as AnyNode);
         }
       });
 
-      return {
-        date,
-        gender,
-        games,
-        lastUpdated: new Date(),
-      };
+      const targetDateStr = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+
+      const target = sections.find(sec => sec.header === targetDateStr);
+      const games: CHNScoreboardGame[] = [];
+      if (target) {
+        for (const rawRow of target.rows) {
+          const $row = $(rawRow);
+          const cells = $row.find('td') as cheerio.Cheerio<AnyNode>;
+          if (cells.length >= 8) {
+            const game = this.parseGameRow($, cells, date);
+            if (game) games.push(game);
+          }
+        }
+      }
+
+      return { date, gender, games, lastUpdated: new Date() };
     } catch (error) {
       console.error('Scoreboard scraping error:', error);
       throw new Error(`Failed to scrape ${gender}'s scoreboard: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static parseGameRow($: cheerio.CheerioAPI, cells: cheerio.Cheerio<any>, date: Date): CHNScoreboardGame | null {
+  private static parseGameRow($: cheerio.CheerioAPI, cells: cheerio.Cheerio<AnyNode>, date: Date): CHNScoreboardGame | null {
     if (cells.length < 8) return null;
 
     try {
@@ -97,11 +89,11 @@ export class CHNScoreboardScraper {
       // [0]: Away team, [1]: Away score (if completed), [2]: "at"/"vs.", [3]: Home team, 
       // [4]: Home score (if completed), [5]: empty, [6]: time/status, [7]: box score link
       
-      const awayTeam = $(cells[0]).text().trim();
-      const awayScoreText = $(cells[1]).text().trim();
-      const homeTeam = $(cells[3]).text().trim();
-      const homeScoreText = $(cells[4]).text().trim();
-      const timeText = $(cells[6]).text().trim();
+  const awayTeam = cells.eq(0).text().trim();
+  const awayScoreText = cells.eq(1).text().trim();
+  const homeTeam = cells.eq(3).text().trim();
+  const homeScoreText = cells.eq(4).text().trim();
+  const timeText = cells.eq(6).text().trim();
       
       if (!awayTeam || !homeTeam) return null;
 
