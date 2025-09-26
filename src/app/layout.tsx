@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { varsity, geistSans, geistMono } from './fonts';
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "JACHA - College Hockey Rankings",
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${varsity.variable} antialiased bg-slate-900`}
       >
+        <Analytics />
         {children}
       </body>
     </html>

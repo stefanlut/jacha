@@ -69,3 +69,25 @@ export interface CHNTeamInfo {
   conference: string;
   gender: 'men' | 'women';
 }
+
+export interface CHNScoreboardGame {
+  id: string;
+  date: Date;
+  homeTeam: string;
+  awayTeam: string;
+  time?: string;
+  conference: string;
+  exhibition: boolean;
+  status: 'scheduled' | 'completed' | 'postponed' | 'cancelled';
+  result?: {
+    homeScore: number;
+    awayScore: number;
+  };
+}
+
+export interface CHNScoreboard {
+  date: Date;
+  gender: 'men' | 'women';
+  games: CHNScoreboardGame[];
+  lastUpdated: Date;
+}
