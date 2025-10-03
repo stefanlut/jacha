@@ -78,10 +78,15 @@ export interface CHNScoreboardGame {
   time?: string;
   conference: string;
   exhibition: boolean;
-  status: 'scheduled' | 'completed' | 'postponed' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'postponed' | 'cancelled' | 'in-progress';
   result?: {
     homeScore: number;
     awayScore: number;
+  };
+  liveData?: {
+    period: string;
+    timeRemaining: string;
+    intermission?: boolean;
   };
 }
 
