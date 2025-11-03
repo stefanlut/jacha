@@ -44,7 +44,7 @@ importers:
         version: 24.10.0
       '@types/react':
         specifier: ^19
-        version: 19.1.6
+        version: 19.2.2
       '@types/react-dom':
         specifier: ^19
         version: 19.1.11(@types/react@19.1.6)
@@ -475,8 +475,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.0.0
 
-  '@types/react@19.1.6':
-    resolution: {integrity: sha512-JeG0rEWak0N6Itr6QUx+X60uQmN+5t3j9r/OVDtWzFXKaj6kD1BwJzOksD0FF6iWxZlbE1kB0q9vtnU2ekqa1Q==}
+  '@types/react@19.2.2':
+    resolution: {integrity: sha512-6mDvHUFSjyT2B2yeNx2nUgMxh9LtOWvkhIU3uePn2I2oyNymUAX1NIsdgviM4CH+JSrp2D2hsMvJOkxY+0wNRA==}
 
   '@typescript-eslint/eslint-plugin@8.46.2':
     resolution: {integrity: sha512-ZGBMToy857/NIPaaCucIUQgqueOiq7HeAKkhlvqVV4lm089zUFW6ikRySx2v+cAhKeUCPuWVHeimyk6Dw1iY3w==}
@@ -2616,9 +2616,9 @@ snapshots:
 
   '@types/react-dom@19.1.11(@types/react@19.1.6)':
     dependencies:
-      '@types/react': 19.1.6
+      '@types/react': 19.2.2
 
-  '@types/react@19.1.6':
+  '@types/react@19.2.2':
     dependencies:
       csstype: 3.1.3
 
