@@ -1,23 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import * as cheerio from 'cheerio';
 
 import PollSelector from './components/PollSelector';
 import { Poll } from './types';
+import { USCHOPoll } from './utils/uschoPollScraper';
 
 const defaultPoll: Poll = {
   id: 'd-i-mens-poll',
   name: "Men's Division I",
-  url: 'https://json-b.uscho.com/json/rankings/d-i-mens-poll'
+  url: 'men' // Now using gender instead of URL
 };
 
 export default function Home() {
-  const [rankingsHtml, setRankingsHtml] = useState<string>('');
+  const [pollData, setPollData] = useState<USCHOPoll | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [pollDate, setPollDate] = useState<string>('');
   const [selectedPoll, setSelectedPoll] = useState<Poll>(defaultPoll);
 
   useEffect(() => {
@@ -25,96 +23,29 @@ export default function Home() {
       try {
         setLoading(true);
         setError('');
-        const response = await axios.get(selectedPoll.url, {
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
         
-        if (!response.data?.html) {
-          throw new Error('No data received from USCHO');
-        }
-
-        const $ = cheerio.load(response.data.html);
+        const gender = selectedPoll.url as 'men' | 'women';
+        const response = await fetch(`/api/polls?gender=${gender}`);
         
-        // Remove unwanted elements first
-        $('.small-text, script').remove();
-        
-        // Get the main rankings table
-        const table = $('table').first();
-        if (!table.length) {
-          throw new Error('No rankings table found');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch poll data');
         }
         
-        // Replace links with their text content
-        table.find('a').each((_, elem) => {
-          const $link = $(elem);
-          $link.replaceWith($link.text());
-        });
-
-        // Try to find the poll date
-        const headerText = $('h1, h2, h3, h4').text();
-        const dateMatch = headerText.match(/(?:Rankings|Poll).*?([A-Z][a-z]+ \d{1,2},? \d{4})/);
-        if (dateMatch) {
-          setPollDate(dateMatch[1]);
-        } else {
-          // If no date found in headers, look for it in other text
-          $('*').each((i, elem) => {
-            const text = $(elem).text();
-            const match = text.match(/(?:Rankings|Poll).*?([A-Z][a-z]+ \d{1,2},? \d{4})/);
-            if (match) {
-              setPollDate(match[1]);
-              return false; // break the loop
-            }
-          });
-        }
-
-        // Try to find the "Others Receiving Votes" text
-        let othersVotes = '';
+        const poll = await response.json();
+        setPollData(poll);
         
-        // First try to find it in any HTML element
-        $('*').each((i, elem) => {
-          $(elem).contents().each((j, child) => {
-            if (child.type === 'text') {
-              const text = $(child).text().trim();
-              if (text.toLowerCase().includes('others receiving votes')) {
-                othersVotes = text;
-                return false; // break the loop
-              }
-            }
-          });
-          if (othersVotes) return false; // break outer loop if found
-        });
-
-        // If still not found, try searching the raw HTML
-        if (!othersVotes) {
-          const fullHtml = response.data.html;
-          const match = fullHtml.match(/Others receiving votes:[\s\w,\.]+/i);
-          if (match) {
-            othersVotes = match[0];
-          }
-        }
-
-        // Create the cleaned HTML with rankings and others receiving votes
-        const cleanedHtml = `${$.html(table)}
-          ${othersVotes ? `
-            <div class="mt-6 text-sm text-slate-300">
-              <p class="font-semibold mb-2">Others Receiving Votes:</p>
-              <p>${othersVotes.replace(/others\s+receiving\s+votes:?/i, '').trim()}</p>
-            </div>
-          ` : ''}`;
-        
-        setRankingsHtml(cleanedHtml);
       } catch (error) {
         console.error('Error fetching rankings:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch rankings');
+        setError(error instanceof Error ? error.message : 'Failed to load rankings');
+        setPollData(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchRankings();
-  }, [selectedPoll.url]);
+  }, [selectedPoll]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
@@ -129,8 +60,8 @@ export default function Home() {
             <div className="mb-6">
               <h2 className="text-2xl font-semibold text-center mb-6">USCHO Division I Hockey Rankings</h2>
               <PollSelector selectedPoll={selectedPoll} onPollChange={setSelectedPoll} />
-              {!loading && !error && rankingsHtml && (
-                <p className="text-slate-400 text-sm text-center mt-2">Updated {pollDate}</p>
+              {!loading && !error && pollData && (
+                <p className="text-slate-400 text-sm text-center mt-2">Updated {pollData.date}</p>
               )}
             </div>
             
@@ -143,12 +74,41 @@ export default function Home() {
                 <p>{error}</p>
                 <p className="mt-2 text-sm text-slate-400">Please try again later or check back for updated rankings.</p>
               </div>
-            ) : (
-              <div 
-                className="rankings-table prose prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: rankingsHtml }}
-              />
-            )}
+            ) : pollData ? (
+              <div className="rankings-table">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/20">
+                      <th className="p-3 text-sm font-semibold">Rank</th>
+                      <th className="p-3 text-sm font-semibold">Team</th>
+                      <th className="p-3 text-sm font-semibold">1st</th>
+                      <th className="p-3 text-sm font-semibold">Record</th>
+                      <th className="p-3 text-sm font-semibold">Points</th>
+                      <th className="p-3 text-sm font-semibold">Last Week</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pollData.teams.map((team) => (
+                      <tr key={team.rank} className="border-b border-white/10 hover:bg-white/5">
+                        <td className="p-3 font-medium">{team.rank}</td>
+                        <td className="p-3">{team.team}</td>
+                        <td className="p-3 text-center">{team.firstPlaceVotes || ''}</td>
+                        <td className="p-3 text-center">{team.record}</td>
+                        <td className="p-3 text-center">{team.points}</td>
+                        <td className="p-3 text-center">{team.lastWeekRank || 'NR'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                
+                {pollData.othersReceivingVotes && (
+                  <div className="mt-6 text-sm text-slate-300">
+                    <p className="font-semibold mb-2">Others Receiving Votes:</p>
+                    <p>{pollData.othersReceivingVotes}</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </main>
 

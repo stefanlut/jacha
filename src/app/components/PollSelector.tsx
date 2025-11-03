@@ -9,12 +9,12 @@ const polls: Poll[] = [
   {
     id: 'd-i-mens-poll',
     name: "Men's Division I",
-    url: 'https://json-b.uscho.com/json/rankings/d-i-mens-poll'
+    url: 'men'
   },
   {
     id: 'd-i-womens-poll',
     name: "Women's Division I",
-    url: 'https://json-b.uscho.com/json/rankings/d-i-womens-poll'
+    url: 'women'
   }
 ];
 
