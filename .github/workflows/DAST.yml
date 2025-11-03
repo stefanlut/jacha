@@ -1,0 +1,27 @@
+on:
+  workflow_dispatch: {}
+  schedule:
+  - cron: 0 0 * * SUN
+
+name: DAST
+permissions:
+  contents: read
+  issues: write
+  security-events: write
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    name: Scan the webapplication
+    permissions:
+      contents: read
+      issues: write
+      security-events: write
+    steps:
+    - name: ZAP Scan
+      uses: zaproxy/action-api-scan@v0.9.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        target: 'https://www.jacha.vercel.app/'
+        fail_action: false
+        allow_issue_writing: false
+        cmd_options: '-a'
