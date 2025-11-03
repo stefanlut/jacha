@@ -1,5 +1,3 @@
-import * as cheerio from 'cheerio';
-
 export interface USCHOPollTeam {
   rank: number;
   team: string;
