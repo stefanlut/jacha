@@ -38,19 +38,19 @@ importers:
         version: 3.3.1
       '@tailwindcss/typography':
         specifier: 0.5.10
-        version: 0.5.10(tailwindcss@3.3.0(postcss@8.4.31))
+        version: 0.5.10(tailwindcss@3.3.0(postcss@8.5.6))
       '@types/node':
-        specifier: ^20
-        version: 20.17.51
+        specifier: ^24
+        version: 24.10.0
       '@types/react':
         specifier: ^19
         version: 19.2.2
       '@types/react-dom':
         specifier: ^19
-        version: 19.1.5(@types/react@19.2.2)
+        version: 19.1.11(@types/react@19.1.6)
       autoprefixer:
         specifier: 10.4.16
-        version: 10.4.16(postcss@8.4.31)
+        version: 10.4.16(postcss@8.5.6)
       eslint:
         specifier: ^9
         version: 9.39.0(jiti@2.4.2)
@@ -58,11 +58,11 @@ importers:
         specifier: 16.0.0
         version: 16.0.0(@typescript-eslint/parser@8.46.2(eslint@9.39.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.39.0(jiti@2.4.2))(typescript@5.8.3)
       postcss:
-        specifier: 8.4.31
-        version: 8.4.31
+        specifier: 8.5.6
+        version: 8.5.6
       tailwindcss:
         specifier: 3.3.0
-        version: 3.3.0(postcss@8.4.31)
+        version: 3.3.0(postcss@8.5.6)
       typescript:
         specifier: ^5
         version: 5.8.3
@@ -467,11 +467,11 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/node@20.17.51':
-    resolution: {integrity: sha512-hccptBl7C8lHiKxTBsY6vYYmqpmw1E/aGR/8fmueE+B390L3pdMOpNSRvFO4ZnXzW5+p2HBXV0yNABd2vdk22Q==}
+  '@types/node@24.10.0':
+    resolution: {integrity: sha512-qzQZRBqkFsYyaSWXuEHc2WR9c0a0CXwiE5FWUvn7ZM+vdy1uZLfCunD38UzhuB7YN/J11ndbDBcTmOdxJo9Q7A==}
 
-  '@types/react-dom@19.1.5':
-    resolution: {integrity: sha512-CMCjrWucUBZvohgZxkjd6S9h0nZxXjzus6yDfUb+xLxYM7VvjKNH1tQrE9GWLql1XoOP4/Ds3bwFqShHUYraGg==}
+  '@types/react-dom@19.1.11':
+    resolution: {integrity: sha512-3BKc/yGdNTYQVVw4idqHtSOcFsgGuBbMveKCOgF8wQ5QtrYOc3jDIlzg3jef04zcXFIHLelyGlj0T+BJ8+KN+w==}
     peerDependencies:
       '@types/react': ^19.0.0
 
@@ -1817,6 +1817,10 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postcss@8.5.6:
+    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
+    engines: {node: ^10 || ^12 || >=14}
+
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
@@ -2121,8 +2125,8 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
-  undici-types@6.19.8:
-    resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
   undici@7.16.0:
     resolution: {integrity: sha512-QEg3HPMll0o3t2ourKwOeUAZ159Kn9mx5pnzHRQO8+Wixmh88YdZRiIwat0iNzNNXn0yoEtXJqFpyW7eM8BV7g==}
@@ -2577,13 +2581,13 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@tailwindcss/typography@0.5.10(tailwindcss@3.3.0(postcss@8.4.31))':
+  '@tailwindcss/typography@0.5.10(tailwindcss@3.3.0(postcss@8.5.6))':
     dependencies:
       lodash.castarray: 4.4.0
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.3.0(postcss@8.4.31)
+      tailwindcss: 3.3.0(postcss@8.5.6)
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -2606,11 +2610,11 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@20.17.51':
+  '@types/node@24.10.0':
     dependencies:
-      undici-types: 6.19.8
+      undici-types: 7.16.0
 
-  '@types/react-dom@19.1.5(@types/react@19.2.2)':
+  '@types/react-dom@19.1.11(@types/react@19.1.6)':
     dependencies:
       '@types/react': 19.2.2
 
@@ -2890,14 +2894,14 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  autoprefixer@10.4.16(postcss@8.4.31):
+  autoprefixer@10.4.16(postcss@8.5.6):
     dependencies:
       browserslist: 4.24.5
       caniuse-lite: 1.0.30001718
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
-      postcss: 8.4.31
+      postcss: 8.5.6
       postcss-value-parser: 4.2.0
 
   available-typed-arrays@1.0.7:
@@ -4069,28 +4073,28 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-import@14.1.0(postcss@8.4.31):
+  postcss-import@14.1.0(postcss@8.5.6):
     dependencies:
-      postcss: 8.4.31
+      postcss: 8.5.6
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
       resolve: 1.22.10
 
-  postcss-js@4.0.1(postcss@8.4.31):
+  postcss-js@4.0.1(postcss@8.5.6):
     dependencies:
       camelcase-css: 2.0.1
-      postcss: 8.4.31
+      postcss: 8.5.6
 
-  postcss-load-config@3.1.4(postcss@8.4.31):
+  postcss-load-config@3.1.4(postcss@8.5.6):
     dependencies:
       lilconfig: 2.1.0
       yaml: 1.10.2
     optionalDependencies:
-      postcss: 8.4.31
+      postcss: 8.5.6
 
-  postcss-nested@6.0.0(postcss@8.4.31):
+  postcss-nested@6.0.0(postcss@8.5.6):
     dependencies:
-      postcss: 8.4.31
+      postcss: 8.5.6
       postcss-selector-parser: 6.1.2
 
   postcss-selector-parser@6.0.10:
@@ -4106,6 +4110,12 @@ snapshots:
   postcss-value-parser@4.2.0: {}
 
   postcss@8.4.31:
+    dependencies:
+      nanoid: 3.3.11
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
+  postcss@8.5.6:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -4413,7 +4423,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  tailwindcss@3.3.0(postcss@8.4.31):
+  tailwindcss@3.3.0(postcss@8.5.6):
     dependencies:
       arg: 5.0.2
       chokidar: 3.6.0
@@ -4429,11 +4439,11 @@ snapshots:
       normalize-path: 3.0.0
       object-hash: 3.0.0
       picocolors: 1.1.1
-      postcss: 8.4.31
-      postcss-import: 14.1.0(postcss@8.4.31)
-      postcss-js: 4.0.1(postcss@8.4.31)
-      postcss-load-config: 3.1.4(postcss@8.4.31)
-      postcss-nested: 6.0.0(postcss@8.4.31)
+      postcss: 8.5.6
+      postcss-import: 14.1.0(postcss@8.5.6)
+      postcss-js: 4.0.1(postcss@8.5.6)
+      postcss-load-config: 3.1.4(postcss@8.5.6)
+      postcss-nested: 6.0.0(postcss@8.5.6)
       postcss-selector-parser: 6.1.2
       postcss-value-parser: 4.2.0
       quick-lru: 5.1.1
@@ -4531,7 +4541,7 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undici-types@6.19.8: {}
+  undici-types@7.16.0: {}
 
   undici@7.16.0: {}
 
