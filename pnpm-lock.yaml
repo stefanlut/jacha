@@ -38,10 +38,10 @@ importers:
         version: 24.10.1
       '@types/react':
         specifier: ^19
-        version: 19.2.5
+        version: 19.2.7
       '@types/react-dom':
         specifier: ^19
-        version: 19.2.3(@types/react@19.2.5)
+        version: 19.2.3(@types/react@19.2.7)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.22(postcss@8.4.47)
@@ -462,8 +462,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.2.0
 
-  '@types/react@19.2.5':
-    resolution: {integrity: sha512-keKxkZMqnDicuvFoJbzrhbtdLSPhj/rZThDlKWCDbgXmUg0rEUFtRssDXKYmtXluZlIqiC5VqkCgRwzuyLHKHw==}
+  '@types/react@19.2.7':
+    resolution: {integrity: sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==}
 
   '@typescript-eslint/eslint-plugin@8.46.4':
     resolution: {integrity: sha512-R48VhmTJqplNyDxCyqqVkFSZIx1qX6PzwqgcXn1olLrzxcSBDlOsbtcnQuQhNtnNiJ4Xe5gREI1foajYaYU2Vg==}
@@ -862,8 +862,8 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
-  csstype@3.2.2:
-    resolution: {integrity: sha512-D80T+tiqkd/8B0xNlbstWDG4x6aqVfO52+OlSUNIdkTvmNw0uQpJLeos2J/2XvpyidAFuTPmpad+tUxLndwj6g==}
+  csstype@3.2.3:
+    resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
   damerau-levenshtein@1.0.8:
     resolution: {integrity: sha512-sdQSFB7+llfUcQHUQO3+B8ERRj0Oa4w9POWMI/puGtuf7gFywGmkaLCElnudfTiKZV+NvHqL0ifzdrI8Ro7ESA==}
@@ -2529,13 +2529,13 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
-  '@types/react-dom@19.2.3(@types/react@19.2.5)':
+  '@types/react-dom@19.2.3(@types/react@19.2.7)':
     dependencies:
-      '@types/react': 19.2.5
+      '@types/react': 19.2.7
 
-  '@types/react@19.2.5':
+  '@types/react@19.2.7':
     dependencies:
-      csstype: 3.2.2
+      csstype: 3.2.3
 
   '@typescript-eslint/eslint-plugin@8.46.4(@typescript-eslint/parser@8.46.4(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3)':
     dependencies:
@@ -2957,7 +2957,7 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  csstype@3.2.2: {}
+  csstype@3.2.3: {}
 
   damerau-levenshtein@1.0.8: {}
 
